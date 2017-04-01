@@ -2,7 +2,8 @@
 #include <iostream>
 #include "keyboard.h"
 
-GLManager::GLManager(cv::Mat & frame)
+GLManager::GLManager(cv::Mat & frame) :
+	window(nullptr), frameShader(nullptr)
 {
 	initContext(frame.size().width, frame.size().height);
 	initShaders();
@@ -118,10 +119,10 @@ void GLManager::initFrameQuad()
 	// Set up vertex data (and buffer(s)) and attribute pointers
 	GLfloat vertices[] = {
 		// Positions         // Texture Coords
-		1.0f,  1.0f,  0.0f,   0.0f, 0.0f, // Top Right
-		1.0f, -1.0f,  0.0f,   0.0f, 1.0f, // Bottom Right
-	   -1.0f, -1.0f,  0.0f,   1.0f, 1.0f, // Bottom Left
-	   -1.0f,  1.0f,  0.0f,   1.0f, 0.0f  // Top Left
+		1.0f,  1.0f,  0.0f,   1.0f, 0.0f, // Top Right
+		1.0f, -1.0f,  0.0f,   1.0f, 1.0f, // Bottom Right
+	   -1.0f, -1.0f,  0.0f,   0.0f, 1.0f, // Bottom Left
+	   -1.0f,  1.0f,  0.0f,   0.0f, 0.0f  // Top Left
 	};
 	GLuint indices[] = {
 		0, 3, 1,

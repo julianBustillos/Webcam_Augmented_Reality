@@ -30,10 +30,12 @@ int Webcam::getHeight()
 
 void Webcam::read()
 {
-	capture.read(frame);
-	if (frame.empty()) {
+	cv::Mat temp;
+	capture.read(temp);
+	if (temp.empty()) {
 		std::cerr << "ERROR! blank frame grabbed" << std::endl;
 	}
+	cv::flip(temp, frame, 1);
 }
 
 cv::Mat & Webcam::getFrame()
