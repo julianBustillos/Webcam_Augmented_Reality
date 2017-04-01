@@ -1,3 +1,9 @@
 #pragma once
 
 #define DEBUG 1
+#define REGION_PIXEL_SIZE 40
+#define SCANLINE_STRIDE 5
+#define FILTER {-3, -5, 0, 5, 3}
+#define INTENSITY_THRESHOLD 270
+#define NEIGHBORHOOD_SIZE 4
+#define CHANNEL_GAP_THRESHOLD 100

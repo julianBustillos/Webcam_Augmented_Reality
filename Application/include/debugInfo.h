@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <time.h>
+#include "frameProcessing.h"
 
 
 enum class FPS {
@@ -11,8 +12,8 @@ enum class FPS {
 };
 
 enum class Mode {
-	CLASSIC,
-	POINTS,
+	NORMAL,
+	EDGELS,
 	SIZE
 };
 
@@ -22,7 +23,8 @@ public:
 	DebugInfo();
 	~DebugInfo();
 	void nextFPS();
-	void printOnFrame(cv::Mat & frame);
+	void nextMode();
+	void printOnFrame(cv::Mat & frame, FrameProcessing & processing);
 
 private:
 	FPS fps;
@@ -32,6 +34,8 @@ private:
 	int fpsCounter;
 	int actualFps;
 	void updateFPS();
-	void print(cv::Mat & frame);
+	void print(cv::Mat & frame, FrameProcessing & processing);
+	void printEdgels(cv::Mat & frame, FrameProcessing & processing);
+	void printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color);
 
 };

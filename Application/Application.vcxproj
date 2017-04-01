@@ -135,9 +135,11 @@
   <ItemGroup>
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="sources\debugInfo.cpp" />
+    <ClCompile Include="sources\frameProcessing.cpp" />
     <ClCompile Include="sources\GLManager.cpp" />
     <ClCompile Include="sources\keyboard.cpp" />
     <ClCompile Include="sources\main.cpp" />
+    <ClCompile Include="sources\mathTools.cpp" />
     <ClCompile Include="sources\webcam.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -145,9 +147,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\debugInfo.h" />
+    <ClInclude Include="include\frameProcessing.h" />
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />
     <ClInclude Include="include\macros.h" />
+    <ClInclude Include="include\mathTools.h" />
     <ClInclude Include="include\shader.h" />
     <ClInclude Include="include\webcam.h" />
   </ItemGroup>

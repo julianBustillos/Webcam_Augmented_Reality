@@ -16,6 +16,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		info->nextFPS();
 		break;
 	case GLFW_KEY_SEMICOLON: // M (AZERTY)
+		info->nextMode();
 		break;
 	default:
 		break;
