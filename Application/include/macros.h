@@ -1,6 +1,10 @@
 #pragma once
 
+// APPLICATION PARAMETERS
 #define DEBUG 1
+#define ARTAG_ID 209192064
+
+// DETECTION PARAMETERS
 #define REGION_PIXEL_SIZE 40
 #define SCANLINE_STRIDE 5
 #define FILTER {-3, -5, 0, 5, 3}

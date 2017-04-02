@@ -13,6 +13,7 @@ enum class FPS {
 
 enum class Mode {
 	NORMAL,
+	REGIONS,
 	EDGELS,
 	SIZE
 };

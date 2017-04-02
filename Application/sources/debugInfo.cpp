@@ -24,6 +24,9 @@ void DebugInfo::nextMode()
 	case Mode::NORMAL:
 		std::cout << "NORMAL MODE" << std::endl;
 		break;
+	case Mode::REGIONS:
+		std::cout << "REGIONS MODE" << std::endl;
+		break;
 	case Mode::EDGELS:
 		std::cout << "EDGELS MODE" << std::endl;
 		break;
@@ -56,6 +59,8 @@ void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
 	}
 
 	switch (mode) {
+	case Mode::REGIONS:
+		break;
 	case Mode::EDGELS:
 		printEdgels(frame, processing);
 		break;
