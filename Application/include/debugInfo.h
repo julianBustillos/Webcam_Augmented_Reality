@@ -15,6 +15,8 @@ enum class Mode {
 	NORMAL,
 	REGIONS,
 	EDGELS,
+	LINES,
+	SUPERPOSITION,
 	SIZE
 };
 
@@ -36,7 +38,9 @@ private:
 	int actualFps;
 	void updateFPS();
 	void print(cv::Mat & frame, FrameProcessing & processing);
+	void printRegions(cv::Mat & frame, FrameProcessing & processing);
 	void printEdgels(cv::Mat & frame, FrameProcessing & processing);
 	void printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color);
+	void printLines(cv::Mat & frame, FrameProcessing & processing);
 
 };

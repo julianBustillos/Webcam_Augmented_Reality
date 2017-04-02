@@ -1,4 +1,6 @@
 #include "mathTools.h"
+#include "macros.h"
+
 
 int MathTools::convolution(cv::Mat & frame, cv::Vec2i frameSize, std::vector<int> filter, cv::Vec2i position, cv::Vec2i scanDir, int channel)
 {
@@ -17,4 +19,40 @@ int MathTools::convolution(cv::Mat & frame, cv::Vec2i frameSize, std::vector<int
 	}
 
 	return sum;
+}
+
+int MathTools::random(int sup)
+{
+	return std::rand() % sup;
+}
+
+float MathTools::orientationDiff(float or1, float or2)
+{
+	float diff1;
+	float diff2;
+
+	diff1 = abs(or1 - or2);
+	if (or1 < or2) {
+		diff2 = abs(or1 + 2 * M_PI - or2);
+	}
+	else {
+		diff2 = abs(or2 + 2 * M_PI - or1);
+	}
+
+	return std::min(diff1, diff2);
+}
+
+float MathTools::lineOrientations(cv::Vec2i lp1, cv::Vec2i lp2)
+{
+	float y = (float)lp2[0] - (float)lp1[0];
+	float x = (float)lp2[1] - (float)lp1[1];
+
+	return atan2f(y, x);
+}
+
+float MathTools::pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p)
+{
+	float temp = (float)abs((lp2[0] - lp1[0]) * (lp1[1] - p[1]) - (lp2[1] - lp1[1]) * (lp1[0] - p[0]));
+	temp /= (float)sqrt((lp2[0] - lp1[0]) * (lp2[0] - lp1[0]) + (lp2[1] - lp1[1]) * (lp2[1] - lp1[1]));
+	return temp;
 }

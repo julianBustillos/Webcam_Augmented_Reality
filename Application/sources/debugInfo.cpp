@@ -1,5 +1,6 @@
 #include "debugInfo.h"
 #include <iostream>
+#include "macros.h"
 
 
 DebugInfo::DebugInfo() :
@@ -29,6 +30,12 @@ void DebugInfo::nextMode()
 		break;
 	case Mode::EDGELS:
 		std::cout << "EDGELS MODE" << std::endl;
+		break;
+	case Mode::LINES:
+		std::cout << "LINES MODE" << std::endl;
+		break;
+	case Mode::SUPERPOSITION:
+		std::cout << "SUPERPOSITION MODE" << std::endl;
 		break;
 	default:
 		break;
@@ -60,12 +67,40 @@ void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
 
 	switch (mode) {
 	case Mode::REGIONS:
+		printRegions(frame, processing);
 		break;
 	case Mode::EDGELS:
 		printEdgels(frame, processing);
 		break;
+	case Mode::LINES:
+		printLines(frame, processing);
+		break;
+	case Mode::SUPERPOSITION:
+		printRegions(frame, processing);
+		printEdgels(frame, processing);
+		printLines(frame, processing);
+		break;
 	default:
 		break;
+	}
+}
+
+void DebugInfo::printRegions(cv::Mat & frame, FrameProcessing & processing)
+{
+	cv::Scalar orange(0, 128, 255);
+
+	int iMin = std::max(0, processing.getRegionOrigin()[0]);
+	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * REGION_PIXEL_SIZE);
+
+	int jMin = std::max(0, processing.getRegionOrigin()[1]);
+	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * REGION_PIXEL_SIZE);
+
+	for (int i = iMin; i < iMax; i += REGION_PIXEL_SIZE) {
+		cv::line(frame, cv::Vec2i(jMin, i), cv::Vec2i(jMax, i), orange, 1);
+	}
+
+	for (int j = jMin; j < jMax; j += REGION_PIXEL_SIZE) {
+		cv::line(frame, cv::Vec2i(j, iMin), cv::Vec2i(j, iMax), orange, 1);
 	}
 }
 
@@ -92,4 +127,16 @@ void DebugInfo::printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color
 	const cv::Point *cRectPtr[4] = { rect };
 	int nbPts = 4;
 	cv::fillPoly(frame, cRectPtr, &nbPts, 1, color);
+}
+
+void DebugInfo::printLines(cv::Mat & frame, FrameProcessing & processing)
+{
+	std::vector<Line> lineList = processing.getLineList();
+	cv::Scalar red(0, 0, 255);
+
+	for (int k = 0; k < lineList.size(); k++) {
+		cv::Vec2i reverseP1(lineList[k].p1[1], lineList[k].p1[0]);
+		cv::Vec2i reverseP2(lineList[k].p2[1], lineList[k].p2[0]);
+		cv::line(frame, reverseP1, reverseP2, red, 2);
+	}
 }

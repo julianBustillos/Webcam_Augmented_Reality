@@ -4,6 +4,8 @@
 #include <macros.h>
 #include "debugInfo.h"
 #include "frameProcessing.h"
+#include <stdlib.h>
+#include <time.h>
 
 DebugInfo *info = nullptr;
 
@@ -13,6 +15,7 @@ int main(int argc, char *argv[])
 
 
 	// Initialization
+	std::srand((int)time(NULL));
 	if (DEBUG) {
 		info = new DebugInfo();
 	}
