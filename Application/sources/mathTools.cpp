@@ -2,7 +2,7 @@
 #include "macros.h"
 
 
-int MathTools::convolution(cv::Mat & frame, cv::Vec2i frameSize, std::vector<int> filter, cv::Vec2i position, cv::Vec2i scanDir, int channel)
+int MathTools::convolution(cv::Mat & frame, cv::Vec2i & frameSize, std::vector<int> & filter, cv::Vec2i & position, cv::Vec2i & scanDir, int channel)
 {
 	int offset = (int)floor(filter.size() / 2.0f);
 	int sum = 0;
@@ -46,8 +46,8 @@ float MathTools::lineOrientations(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];
 	float x = (float)lp2[1] - (float)lp1[1];
-
-	return atan2f(y, x);
+	//std::cout << atan2f(-10, 10)*180/M_PI << " " << atan2f(0, 10) * 180 / M_PI << " " << atan2f(10, 10) * 180 / M_PI << std::endl;
+	return atan2f(-y, x);
 }
 
 float MathTools::pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p)

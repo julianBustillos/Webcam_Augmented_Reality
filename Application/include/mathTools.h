@@ -7,7 +7,7 @@
 
 class MathTools {
 public:
-	static int convolution(cv::Mat & frame, cv::Vec2i frameSize, std::vector<int> filter, cv::Vec2i position, cv::Vec2i scanDir, int channel);
+	static int convolution(cv::Mat & frame, cv::Vec2i & frameSize, std::vector<int> & filter, cv::Vec2i & position, cv::Vec2i & scanDir, int channel);
 	static int random(int sup);
 	static float orientationDiff(float or1, float or2);
 	static float lineOrientations(cv::Vec2i lp1, cv::Vec2i lp2);

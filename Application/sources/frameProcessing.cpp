@@ -150,7 +150,8 @@ void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType ty
 					orientation = std::atan2f((float)strideDirVal, (float)scanline[argmax]);
 				}
 
-				addEdgel(position, orientation, type);
+				//if (orientation < -3 * M_PI / 16 && orientation > -5 * M_PI / 16)//DEBUG
+					addEdgel(position, orientation, type);
 			}
 
 			nullifyNeighbors(scanline, argmax);
