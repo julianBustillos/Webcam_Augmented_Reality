@@ -34,6 +34,9 @@ void DebugInfo::nextMode()
 	case Mode::LINES:
 		std::cout << "LINES MODE" << std::endl;
 		break;
+	case Mode::MERGED:
+		std::cout << "MERGED MODE" << std::endl;
+		break;
 	case Mode::SUPERPOSITION:
 		std::cout << "SUPERPOSITION MODE" << std::endl;
 		break;
@@ -75,9 +78,13 @@ void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
 	case Mode::LINES:
 		printLines(frame, processing);
 		break;
+	case Mode::MERGED:
+		printMergedLines(frame, processing);
+		break;
 	case Mode::SUPERPOSITION:
 		printRegions(frame, processing);
 		printEdgels(frame, processing);
+		printMergedLines(frame, processing);
 		printLines(frame, processing);
 		break;
 	default:
@@ -134,9 +141,22 @@ void DebugInfo::printLines(cv::Mat & frame, FrameProcessing & processing)
 	std::vector<Line> lineList = processing.getLineList();
 	cv::Scalar red(0, 0, 255);
 
+	printLineList(frame, lineList, red);
+}
+
+void DebugInfo::printLineList(cv::Mat & frame, std::vector<Line>& lineList, cv::Scalar color)
+{
 	for (int k = 0; k < lineList.size(); k++) {
 		cv::Vec2i reverseP1(lineList[k].p1[1], lineList[k].p1[0]);
 		cv::Vec2i reverseP2(lineList[k].p2[1], lineList[k].p2[0]);
-		cv::line(frame, reverseP1, reverseP2, red, 2);
+		cv::line(frame, reverseP1, reverseP2, color, 2);
 	}
+}
+
+void DebugInfo::printMergedLines(cv::Mat & frame, FrameProcessing & processing)
+{
+	std::vector<Line> lineList = processing.getMergedLineList();
+	cv::Scalar orange(0, 128, 255);
+
+	printLineList(frame, lineList, orange);
 }

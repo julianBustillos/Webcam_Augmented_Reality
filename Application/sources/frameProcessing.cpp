@@ -30,6 +30,7 @@ void FrameProcessing::execute(cv::Mat & frame)
 {
 	findEdgels(frame);
 	RANSACGrouper();
+	mergeLines();
 }
 
 cv::Vec2i FrameProcessing::getRegionOrigin()
@@ -40,6 +41,11 @@ cv::Vec2i FrameProcessing::getRegionOrigin()
 cv::Vec2i FrameProcessing::getRegionNumber()
 {
 	return regionNumber;
+}
+
+std::vector<Line> FrameProcessing::getMergedLineList()
+{
+	return mergedLines;
 }
 
 std::vector<Edgel> FrameProcessing::getEdgelList()
@@ -297,4 +303,26 @@ int FrameProcessing::countCompatibleEdgels(HypoLine & line, std::vector<int>& in
 	}
 
 	return count;
+}
+
+void FrameProcessing::mergeLines()
+{
+	std::vector<Line> regionMergedLines;
+	regionMergedLines.clear();
+	mergedLines.clear();
+
+	// Merge lines by region
+	for (int i = 0; i < regionNumber[0]; i++) {
+		for (int j = 0; j < regionNumber[1]; j++) {
+			addMergedLines(regionMergedLines, regionGrid[i][j].lines);
+		}
+	}
+
+	// Merge all lines
+	addMergedLines(mergedLines, regionMergedLines);
+}
+
+void FrameProcessing::addMergedLines(std::vector<Line>& finalLineList, std::vector<Line>& initialLineList)
+{
+	//TODO
 }
