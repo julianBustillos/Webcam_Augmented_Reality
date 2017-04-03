@@ -42,11 +42,23 @@ float MathTools::orientationDiff(float or1, float or2)
 	return std::min(diff1, diff2);
 }
 
-float MathTools::lineOrientations(cv::Vec2i lp1, cv::Vec2i lp2)
+float MathTools::edgelOrientation(int scanDirVal, int strideDirVal, EdgelType type)
+{
+	float orientation;
+	if (type == EdgelType::vertical) {
+		orientation = std::atan2f((float)scanDirVal, (float)strideDirVal);
+	}
+	else {
+		orientation = std::atan2f((float)strideDirVal, (float)scanDirVal);
+	}
+	return orientation;
+}
+
+float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];
 	float x = (float)lp2[1] - (float)lp1[1];
-	//std::cout << atan2f(-10, 10)*180/M_PI << " " << atan2f(0, 10) * 180 / M_PI << " " << atan2f(10, 10) * 180 / M_PI << std::endl;
+
 	return atan2f(-y, x);
 }
 

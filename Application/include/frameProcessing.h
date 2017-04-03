@@ -52,8 +52,7 @@ private:
 	void addEdgel(cv::Vec2i position, float orientation, EdgelType type);
 	void findEdgels(cv::Mat & frame);
 	void scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType type);
-	int absArgmax(std::vector<int> &scanline);
-	void nullifyNeighbors(std::vector<int> &scanline, int index);
+	void getAbsArgmaxList(std::vector<int> &argList, std::vector<int> &scanline);
 	void RANSACGrouper();
 	void initEdgelsList(std::vector<int> & index, int i, int j);
 	HypoLine getHypotheticLine(std::vector<int> & index, std::vector<Edgel> & edgels);

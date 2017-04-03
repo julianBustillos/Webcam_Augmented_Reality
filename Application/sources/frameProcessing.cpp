@@ -118,6 +118,7 @@ void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType ty
 	std::vector<int> scanline(scanIdxLast - scanIdxFirst);
 
 	std::vector<int> filter = FILTER;
+	std::vector<int> argList;
 
 	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += SCANLINE_STRIDE) {
 		for (int scanIdx = 0; scanIdx < scanline.size(); scanIdx++) {
@@ -129,58 +130,45 @@ void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType ty
 		}
 			
 		// Search local extremum
-		int argmax = absArgmax(scanline);
-		int maxAbsValue = abs(scanline[argmax]);
-		while (maxAbsValue >= INTENSITY_THRESHOLD) {
+		getAbsArgmaxList(argList, scanline);
+		for (int argIdx = 0; argIdx < argList.size(); argIdx++) {
 
-			cv::Vec2i position = argmax * scanDir + strideIdx * strideDir;
+			cv::Vec2i position = argList[argIdx] * scanDir + strideIdx * strideDir;
 			int channel1Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 1);
 			int channel2Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 2);
 
-			if (abs(scanline[argmax] - channel1Val) < CHANNEL_GAP_THRESHOLD
-				&& abs(scanline[argmax] - channel2Val) < CHANNEL_GAP_THRESHOLD)
-			{
+			if (abs(scanline[argList[argIdx]] - channel1Val) < CHANNEL_GAP_THRESHOLD
+				&& abs(scanline[argList[argIdx]] - channel2Val) < CHANNEL_GAP_THRESHOLD) {
 				// Create new edgel
 				int strideDirVal = MathTools::convolution(frame, frameSize, filter, position, strideDir, 0);
-				float orientation;
-				if (type == EdgelType::vertical) {
-					orientation = std::atan2f((float)scanline[argmax], (float)strideDirVal);
-				}
-				else {
-					orientation = std::atan2f((float)strideDirVal, (float)scanline[argmax]);
-				}
-
-				//if (orientation < -3 * M_PI / 16 && orientation > -5 * M_PI / 16)//DEBUG
-					addEdgel(position, orientation, type);
+				float orientation = MathTools::edgelOrientation(scanline[argList[argIdx]], strideDirVal, type);
+				addEdgel(position, orientation, type);
 			}
-
-			nullifyNeighbors(scanline, argmax);
-			argmax = absArgmax(scanline);
-			maxAbsValue = abs(scanline[argmax]);
 		}
 
 	}
 }
 
-int FrameProcessing::absArgmax(std::vector<int>& scanline)
+void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, std::vector<int>& scanline)
 {
-	int argmax = 0;
-	int max = abs(scanline[0]);
+	int currentArgmax = -1;
+	int currentMax = -1;
+	int temp;
+	argList.clear();
 
-	for (int k = 1; k < scanline.size(); k++) {
-		if (abs(scanline[k]) > max) {
-			argmax = k;
-			max = abs(scanline[k]);
+	for (int k = 0; k < scanline.size(); k++) {
+		temp = abs(scanline[k]);
+		if (temp < INTENSITY_THRESHOLD) {
+			if (currentArgmax >= 0) {
+				argList.push_back(currentArgmax);
+				currentMax = -1;
+				currentArgmax = -1;
+			}
 		}
-	}
-
-	return argmax;
-}
-
-void FrameProcessing::nullifyNeighbors(std::vector<int>& scanline, int index)
-{
-	for (int k = std::max(0, index - NEIGHBORHOOD_SIZE / 2); k < std::min((int)scanline.size(), index + NEIGHBORHOOD_SIZE / 2); k++) {
-		scanline[k] = 0;
+		else if (temp > currentMax) {
+			currentMax = temp;
+			currentArgmax = k;
+		}
 	}
 }
 
@@ -260,7 +248,7 @@ HypoLine FrameProcessing::getHypotheticLine(std::vector<int>& index, std::vector
 
 		or1 = edgels[index[id1]].orientation;
 		or2 = edgels[index[id2]].orientation;
-		lineOr = MathTools::lineOrientations(edgels[index[id1]].position, edgels[index[id2]].position);
+		lineOr = MathTools::lineOrientation(edgels[index[id1]].position, edgels[index[id2]].position);
 		
 		float diffL1 = MathTools::orientationDiff(lineOr, or1);
 		float diffL2 = MathTools::orientationDiff(lineOr, or2);
