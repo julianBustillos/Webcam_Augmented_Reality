@@ -87,7 +87,7 @@ void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
 
 void DebugInfo::printRegions(cv::Mat & frame, FrameProcessing & processing)
 {
-	cv::Scalar orange(0, 128, 255);
+	cv::Scalar orange(255, 128, 0);
 
 	int iMin = std::max(0, processing.getRegionOrigin()[0]);
 	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * REGION_PIXEL_SIZE);
