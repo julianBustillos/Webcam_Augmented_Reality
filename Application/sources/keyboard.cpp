@@ -1,14 +1,15 @@
-#include "constants.h"
-
-#ifdef _DEBUG_
 #include "keyboard.h"
-#include "debugInfo.h"
+#include "debug.h"
 
+#ifdef DEBUG
+#include "debugInfo.h"
 extern DebugInfo info;
+#endif
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+#ifdef DEBUG
 	if (action != GLFW_PRESS) {
 		return;
 	}
@@ -26,6 +27,5 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	default:
 		break;
 	}
-}
-
 #endif
+}

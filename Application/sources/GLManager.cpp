@@ -1,8 +1,9 @@
 #include "GLManager.h"
 #include <iostream>
+#include "debug.h"
 #include "constants.h"
 
-#ifdef _DEBUG_
+#ifdef DEBUG
 #include "keyboard.h"
 #endif
 
@@ -89,7 +90,7 @@ void GLManager::initContext(int width, int height)
 
 	glfwMakeContextCurrent(window);
 
-#ifdef _DEBUG_
+#ifdef DEBUG
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);

@@ -6,9 +6,9 @@
 
 DebugInfo::DebugInfo() :
 	fps(FPS::DISABLED), mode(Mode::NORMAL), start(time(NULL)), end(time(NULL)), fpsCounter(0), actualFps(0),
-	isWindowOpen(false), windowName("DEBUG - PARAMETERS")
+	windowName("DEBUG - PARAMETERS")
 {
-	std::cout << "### DEBUG MODE ENABLED" << std::endl;
+	std::cout << "### DEBUG MODE ENABLED ###" << std::endl << std::endl;
 }
 
 DebugInfo::~DebugInfo()
@@ -55,32 +55,33 @@ void DebugInfo::printOnFrame(cv::Mat & frame, const FrameProcessing & processing
 
 void DebugInfo::parametersWindow()
 {
-	if (isWindowOpen) {
-		closeParametersWindow();
-	}
-	else {
-		openParametersWindow();
-	}
-
-	isWindowOpen = !isWindowOpen;
-}
-
-void test(int val, void *data) {
-	std::cout << "CALLBACK" << std::endl;
-}
-
-void DebugInfo::openParametersWindow() const
-{
 	// Create window
-	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
+	cv::resizeWindow(windowName, 280, 430);
 
 	//Create trackbars
-	cv::createTrackbar("test", windowName, &CONSTANTS::REGION_PIXEL_SIZE, 100, test);
-}
+	cv::createTrackbar("REGION", windowName, nullptr, 300, callbackIntNotNull, PTR(REGION_PIXEL_SIZE));
+	cv::createTrackbar("STRIDE", windowName, nullptr, 50, callbackIntNotNull, PTR(SCANLINE_STRIDE));
+	cv::createTrackbar("INTENSITY", windowName, nullptr, 200, callbackInt, PTR(INTENSITY_THRESHOLD));
+	cv::createTrackbar("CHANNEL", windowName, nullptr, 256, callbackInt, PTR(CHANNEL_GAP_THRESHOLD));
+	cv::createTrackbar("ORIENT", windowName, nullptr, 360, callbackFloatDegree, PTR(ORIENTATION_TOLERANCE));
+	cv::createTrackbar("HLINE", windowName, nullptr, 200, callbackInt, PTR(HYPOLINE_ATTEMPTS));
+	cv::createTrackbar("PL_DIST", windowName, nullptr, 300, callbackInt, PTR(POINT_LINE_DIST_TOLERANCE));
+	cv::createTrackbar("DL_SEARCH", windowName, nullptr, 200, callbackInt, PTR(DOMINANT_LINE_SEARCH_ATTEMPTS));
+	cv::createTrackbar("DL_VOTES", windowName, nullptr, 30, callbackInt, PTR(MIN_DOMINANT_LINE_VOTES));
+	cv::createTrackbar("L_SEARCH", windowName, nullptr, 100, callbackInt, PTR(MAX_LINE_SEARCH_ITER));
 
-void DebugInfo::closeParametersWindow() const
-{
-	cv::destroyWindow(windowName);
+	// Set trackbars values
+	cv::setTrackbarPos("REGION", windowName, GET(REGION_PIXEL_SIZE));
+	cv::setTrackbarPos("STRIDE", windowName, GET(SCANLINE_STRIDE));
+	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
+	cv::setTrackbarPos("CHANNEL", windowName, GET(CHANNEL_GAP_THRESHOLD));
+	cv::setTrackbarPos("ORIENT", windowName, (int)(GET(ORIENTATION_TOLERANCE) * 180 / M_PI));
+	cv::setTrackbarPos("HLINE", windowName, GET(HYPOLINE_ATTEMPTS));
+	cv::setTrackbarPos("PL_DIST", windowName, (int)(GET(POINT_LINE_DIST_TOLERANCE) * 100));
+	cv::setTrackbarPos("DL_SEARCH", windowName, GET(DOMINANT_LINE_SEARCH_ATTEMPTS));
+	cv::setTrackbarPos("DL_VOTES", windowName, GET(MIN_DOMINANT_LINE_VOTES));
+	cv::setTrackbarPos("L_SEARCH", windowName, GET(MAX_LINE_SEARCH_ITER));
 }
 
 void DebugInfo::updateFPS()
@@ -129,16 +130,16 @@ void DebugInfo::printRegions(cv::Mat & frame, const FrameProcessing & processing
 	cv::Scalar orange(255, 128, 0);
 
 	int iMin = std::max(0, processing.getRegionOrigin()[0]);
-	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * CONSTANTS::REGION_PIXEL_SIZE);
+	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * GET(REGION_PIXEL_SIZE));
 
 	int jMin = std::max(0, processing.getRegionOrigin()[1]);
-	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * CONSTANTS::REGION_PIXEL_SIZE);
+	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * GET(REGION_PIXEL_SIZE));
 
-	for (int i = iMin; i < iMax; i += CONSTANTS::REGION_PIXEL_SIZE) {
+	for (int i = iMin; i < iMax; i += GET(REGION_PIXEL_SIZE)) {
 		cv::line(frame, cv::Vec2i(jMin, i), cv::Vec2i(jMax, i), orange, 1);
 	}
 
-	for (int j = jMin; j < jMax; j += CONSTANTS::REGION_PIXEL_SIZE) {
+	for (int j = jMin; j < jMax; j += GET(REGION_PIXEL_SIZE)) {
 		cv::line(frame, cv::Vec2i(j, iMin), cv::Vec2i(j, iMax), orange, 1);
 	}
 }
@@ -191,4 +192,35 @@ void DebugInfo::printMergedLines(cv::Mat & frame, const FrameProcessing & proces
 	cv::Scalar orange(0, 128, 255);
 
 	printLineList(frame, lineList, orange);
+}
+
+void callbackInt(int val, void *data) {
+	int *ptr = (int *)data;
+	if (ptr) {
+		*ptr = val;
+	}
+}
+
+void callbackIntNotNull(int val, void * data)
+{
+	int *ptr = (int *)data;
+	if (ptr && val > 0) {
+		*ptr = val;
+	}
+}
+
+void callbackFloatDegree(int val, void * data)
+{
+	float *ptr = (float *)data;
+	if (ptr) {
+		*ptr = val * M_PI / 180;
+	}
+}
+
+void callbackFloatDist(int val, void * data)
+{
+	float *ptr = (float *)data;
+	if (ptr) {
+		*ptr = (float)val / 100;
+	}
 }

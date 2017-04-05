@@ -1,3 +1,4 @@
+#include "debug.h"
 #include <iostream>
 #include "webcam.h"
 #include "GLManager.h"
@@ -6,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef _DEBUG_
+#ifdef DEBUG
 #include "debugInfo.h"
 DebugInfo info;
 #endif
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
 		glManager.event();
 		webcam.read();
 		processing.execute(webcam.getFrame());
-#ifdef _DEBUG_
+#ifdef DEBUG
 		info.printOnFrame(webcam.getFrame(), processing);
 #endif
 		glManager.drawFrame(webcam.getFrame());

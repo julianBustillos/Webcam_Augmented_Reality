@@ -40,8 +40,6 @@ private:
 	void printLines(cv::Mat & frame, const FrameProcessing & processing) const;
 	void printLineList(cv::Mat & frame, const std::vector<Line> & lineList, const cv::Scalar color) const;
 	void printMergedLines(cv::Mat & frame, const FrameProcessing & processing) const;
-	void openParametersWindow() const;
-	void closeParametersWindow() const;
 
 	// DATA
 	FPS fps;
@@ -50,6 +48,10 @@ private:
 	time_t end;
 	int fpsCounter;
 	int actualFps;
-	bool isWindowOpen;
 	const std::string windowName;
 };
+
+void callbackInt(int val, void *data);
+void callbackIntNotNull(int val, void *data);
+void callbackFloatDegree(int val, void *data);
+void callbackFloatDist(int val, void *data);

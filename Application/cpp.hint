@@ -1,0 +1,3 @@
+#define DECLARE(TYPE, NAME)
+#define INIT(TYPE, NAME, VALUE)
+#define INIT_VECT(TYPE, NAME, ...)

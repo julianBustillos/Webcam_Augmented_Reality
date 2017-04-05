@@ -11,8 +11,8 @@ FrameProcessing::FrameProcessing(int width, int height)
 	frameSize[1] = width;
 	regionOrigin[0] = 0;
 	regionOrigin[1] = 0;
-	regionNumber[0] = (int)ceil((float)height / CONSTANTS::REGION_PIXEL_SIZE);
-	regionNumber[1] = (int)ceil((float)width / CONSTANTS::REGION_PIXEL_SIZE);
+	regionNumber[0] = (int)ceil((float)height / GET(REGION_PIXEL_SIZE));
+	regionNumber[1] = (int)ceil((float)width / GET(REGION_PIXEL_SIZE));
 	
 	regionGrid.resize(regionNumber[0]);
 	for (int i = 0; i < regionGrid.size(); i++) {
@@ -98,8 +98,8 @@ void FrameProcessing::addEdgel(cv::Vec2i position, float orientation, EdgelType 
 	edgel.type = type;
 
 	cv::Vec2i regionIndex;
-	regionIndex[0] = (int)floor((float)(position[0]-regionOrigin[0]) / CONSTANTS::REGION_PIXEL_SIZE);
-	regionIndex[1] = (int)floor((float)(position[1]-regionOrigin[1]) / CONSTANTS::REGION_PIXEL_SIZE);
+	regionIndex[0] = (int)floor((float)(position[0]-regionOrigin[0]) / GET(REGION_PIXEL_SIZE));
+	regionIndex[1] = (int)floor((float)(position[1]-regionOrigin[1]) / GET(REGION_PIXEL_SIZE));
 
 	regionGrid[regionIndex[0]][regionIndex[1]].edgels.push_back(edgel);
 }
@@ -117,16 +117,16 @@ void FrameProcessing::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelT
 {
 	cv::Vec2i strideDir = cv::Vec2i(1, 1) - scanDir;
 	int strideIdxFirst = regionOrigin.dot(strideDir);
-	int strideIdxLast = std::min(strideIdxFirst + regionNumber.dot(strideDir) * CONSTANTS::REGION_PIXEL_SIZE, frameSize.dot(strideDir));
+	int strideIdxLast = std::min(strideIdxFirst + regionNumber.dot(strideDir) * GET(REGION_PIXEL_SIZE), frameSize.dot(strideDir));
 
 	int scanIdxFirst = regionOrigin.dot(scanDir);
-	int scanIdxLast = std::min(scanIdxFirst + regionNumber.dot(scanDir) * CONSTANTS::REGION_PIXEL_SIZE, frameSize.dot(scanDir));
+	int scanIdxLast = std::min(scanIdxFirst + regionNumber.dot(scanDir) * GET(REGION_PIXEL_SIZE), frameSize.dot(scanDir));
 	std::vector<int> scanline(scanIdxLast - scanIdxFirst);
 
-	std::vector<int> filter = CONSTANTS::FILTER;
+	std::vector<int> filter = GET(FILTER);
 	std::vector<int> argList;
 
-	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += CONSTANTS::SCANLINE_STRIDE) {
+	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += GET(SCANLINE_STRIDE)) {
 		for (int scanIdx = 0; scanIdx < scanline.size(); scanIdx++) {
 
 			// Get all scanline values
@@ -143,8 +143,8 @@ void FrameProcessing::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelT
 			int channel1Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 1);
 			int channel2Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 2);
 
-			if (abs(scanline[argList[argIdx]] - channel1Val) < CONSTANTS::CHANNEL_GAP_THRESHOLD
-				&& abs(scanline[argList[argIdx]] - channel2Val) < CONSTANTS::CHANNEL_GAP_THRESHOLD) {
+			if (abs(scanline[argList[argIdx]] - channel1Val) < GET(CHANNEL_GAP_THRESHOLD)
+				&& abs(scanline[argList[argIdx]] - channel2Val) < GET(CHANNEL_GAP_THRESHOLD)) {
 				// Create new edgel
 				int strideDirVal = MathTools::convolution(frame, frameSize, filter, position, strideDir, 0);
 				float orientation = MathTools::edgelOrientation(scanline[argList[argIdx]], strideDirVal, type);
@@ -164,7 +164,7 @@ void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, const std::vec
 
 	for (int k = 0; k < scanline.size(); k++) {
 		temp = abs(scanline[k]);
-		if (temp < CONSTANTS::INTENSITY_THRESHOLD) {
+		if (temp <= GET(INTENSITY_THRESHOLD)) {
 			if (currentArgmax >= 0) {
 				argList.push_back(currentArgmax);
 				currentMax = -1;
@@ -192,12 +192,12 @@ void FrameProcessing::RANSACGrouper()
 			initEdgelsList(index, i, j);
 			iterations = 0;
 
-			while (++iterations < CONSTANTS::MAX_LINE_SEARCH_ITER && index.size() > 2) {
+			while (++iterations < GET(MAX_LINE_SEARCH_ITER) && index.size() > 2) {
 
 				// Search dominant line
 				maxVotes = -1;
 
-				for (int id = 0; id < CONSTANTS::DOMINANT_LINE_SEARCH_ATTEMPTS; id++) {
+				for (int id = 0; id < GET(DOMINANT_LINE_SEARCH_ATTEMPTS); id++) {
 					line = getHypotheticLine(index, regionGrid[i][j].edgels);
 					if (line.id1 < 0) {
 						break;
@@ -211,7 +211,7 @@ void FrameProcessing::RANSACGrouper()
 				}
 
 				// Add dominant line and remove edgels OR no dominant line
-				if (maxVotes >= CONSTANTS::MIN_DOMINANT_LINE_VOTES) {
+				if (maxVotes >= GET(MIN_DOMINANT_LINE_VOTES)) {
 					Line newLine;
 					newLine.p1 = regionGrid[i][j].edgels[index[dominantLine.id1]].position;
 					newLine.p2 = regionGrid[i][j].edgels[index[dominantLine.id2]].position;
@@ -259,9 +259,9 @@ HypoLine FrameProcessing::getHypotheticLine(const std::vector<int>& index, const
 		float diffL1 = MathTools::orientationDiff(lineOr, or1);
 		float diffL2 = MathTools::orientationDiff(lineOr, or2);
 		
-		oriOK = (diffL1 < CONSTANTS::ORIENTATION_TOLERANCE) && (diffL2 < CONSTANTS::ORIENTATION_TOLERANCE);
+		oriOK = (diffL1 < GET(ORIENTATION_TOLERANCE)) && (diffL2 < GET(ORIENTATION_TOLERANCE));
 
-		if (count++ >= CONSTANTS::HYPOLINE_ATTEMPTS) {
+		if (count++ >= GET(HYPOLINE_ATTEMPTS)) {
 			line.id1 = -1;
 			return line;
 		}
@@ -288,13 +288,13 @@ int FrameProcessing::countCompatibleEdgels(HypoLine & line, const std::vector<in
 		}
 		
 		orDiff = MathTools::orientationDiff(line.orientation, edgels[index[idx]].orientation);
-		if (abs(orDiff) > CONSTANTS::ORIENTATION_TOLERANCE) {
+		if (abs(orDiff) > GET(ORIENTATION_TOLERANCE)) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
 
 		dist = MathTools::pointLineDistance(edgels[index[line.id1]].position, edgels[index[line.id2]].position, edgels[index[idx]].position);
-		if (dist > CONSTANTS::POINT_LINE_DIST_TOLERANCE) {
+		if (dist > GET(POINT_LINE_DIST_TOLERANCE)) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
