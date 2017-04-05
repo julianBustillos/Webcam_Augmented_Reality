@@ -1,12 +1,14 @@
 #include "debugInfo.h"
 #include <iostream>
-#include "macros.h"
+#include "constants.h"
+#include <opencv/highgui.h>
 
 
 DebugInfo::DebugInfo() :
-	fps(FPS::DISABLED), mode(Mode::NORMAL), start(time(NULL)), end(time(NULL)), fpsCounter(0), actualFps(0)
+	fps(FPS::DISABLED), mode(Mode::NORMAL), start(time(NULL)), end(time(NULL)), fpsCounter(0), actualFps(0),
+	isWindowOpen(false), windowName("DEBUG - PARAMETERS")
 {
-	std::cout << "DEBUG MODE ENABLED" << std::endl << std::endl;
+	std::cout << "### DEBUG MODE ENABLED" << std::endl;
 }
 
 DebugInfo::~DebugInfo()
@@ -45,10 +47,40 @@ void DebugInfo::nextMode()
 	}
 }
 
-void DebugInfo::printOnFrame(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::printOnFrame(cv::Mat & frame, const FrameProcessing & processing)
 {
 	updateFPS();
 	print(frame, processing);
+}
+
+void DebugInfo::parametersWindow()
+{
+	if (isWindowOpen) {
+		closeParametersWindow();
+	}
+	else {
+		openParametersWindow();
+	}
+
+	isWindowOpen = !isWindowOpen;
+}
+
+void test(int val, void *data) {
+	std::cout << "CALLBACK" << std::endl;
+}
+
+void DebugInfo::openParametersWindow() const
+{
+	// Create window
+	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+
+	//Create trackbars
+	cv::createTrackbar("test", windowName, &CONSTANTS::REGION_PIXEL_SIZE, 100, test);
+}
+
+void DebugInfo::closeParametersWindow() const
+{
+	cv::destroyWindow(windowName);
 }
 
 void DebugInfo::updateFPS()
@@ -62,7 +94,7 @@ void DebugInfo::updateFPS()
 	}
 }
 
-void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::print(cv::Mat & frame, const FrameProcessing & processing) const
 {
 	if (fps == FPS::ENABLED) {
 		cv::putText(frame, "FPS : " + std::to_string(actualFps), cvPoint(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 187, 0));
@@ -92,26 +124,26 @@ void DebugInfo::print(cv::Mat & frame, FrameProcessing & processing)
 	}
 }
 
-void DebugInfo::printRegions(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::printRegions(cv::Mat & frame, const FrameProcessing & processing) const
 {
 	cv::Scalar orange(255, 128, 0);
 
 	int iMin = std::max(0, processing.getRegionOrigin()[0]);
-	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * REGION_PIXEL_SIZE);
+	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * CONSTANTS::REGION_PIXEL_SIZE);
 
 	int jMin = std::max(0, processing.getRegionOrigin()[1]);
-	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * REGION_PIXEL_SIZE);
+	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * CONSTANTS::REGION_PIXEL_SIZE);
 
-	for (int i = iMin; i < iMax; i += REGION_PIXEL_SIZE) {
+	for (int i = iMin; i < iMax; i += CONSTANTS::REGION_PIXEL_SIZE) {
 		cv::line(frame, cv::Vec2i(jMin, i), cv::Vec2i(jMax, i), orange, 1);
 	}
 
-	for (int j = jMin; j < jMax; j += REGION_PIXEL_SIZE) {
+	for (int j = jMin; j < jMax; j += CONSTANTS::REGION_PIXEL_SIZE) {
 		cv::line(frame, cv::Vec2i(j, iMin), cv::Vec2i(j, iMax), orange, 1);
 	}
 }
 
-void DebugInfo::printEdgels(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::printEdgels(cv::Mat & frame, const FrameProcessing & processing) const
 {
 	std::vector<Edgel> edgelList = processing.getEdgelList();
 	cv::Scalar blue(255, 0, 0);
@@ -127,7 +159,7 @@ void DebugInfo::printEdgels(cv::Mat & frame, FrameProcessing & processing)
 	}
 }
 
-void DebugInfo::printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color)
+void DebugInfo::printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::Scalar color) const
 {
 	cv::Vec2i reversePos(position[1], position[0]);
 	cv::Point rect[4] = { reversePos + cv::Vec2i(-1, -1), reversePos + cv::Vec2i(-1, 1), reversePos + cv::Vec2i(1, 1), reversePos + cv::Vec2i(1, -1) };
@@ -136,7 +168,7 @@ void DebugInfo::printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color
 	cv::fillPoly(frame, cRectPtr, &nbPts, 1, color);
 }
 
-void DebugInfo::printLines(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::printLines(cv::Mat & frame, const FrameProcessing & processing) const
 {
 	std::vector<Line> lineList = processing.getLineList();
 	cv::Scalar red(0, 0, 255);
@@ -144,7 +176,7 @@ void DebugInfo::printLines(cv::Mat & frame, FrameProcessing & processing)
 	printLineList(frame, lineList, red);
 }
 
-void DebugInfo::printLineList(cv::Mat & frame, std::vector<Line>& lineList, cv::Scalar color)
+void DebugInfo::printLineList(cv::Mat & frame, const std::vector<Line>& lineList, const cv::Scalar color) const
 {
 	for (int k = 0; k < lineList.size(); k++) {
 		cv::Vec2i reverseP1(lineList[k].p1[1], lineList[k].p1[0]);
@@ -153,7 +185,7 @@ void DebugInfo::printLineList(cv::Mat & frame, std::vector<Line>& lineList, cv::
 	}
 }
 
-void DebugInfo::printMergedLines(cv::Mat & frame, FrameProcessing & processing)
+void DebugInfo::printMergedLines(cv::Mat & frame, const FrameProcessing & processing) const
 {
 	std::vector<Line> lineList = processing.getMergedLineList();
 	cv::Scalar orange(0, 128, 255);

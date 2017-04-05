@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="sources\constants.cpp" />
     <ClCompile Include="sources\debugInfo.cpp" />
     <ClCompile Include="sources\frameProcessing.cpp" />
     <ClCompile Include="sources\GLManager.cpp" />
@@ -150,7 +151,7 @@
     <ClInclude Include="include\frameProcessing.h" />
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />
-    <ClInclude Include="include\macros.h" />
+    <ClInclude Include="include\constants.h" />
     <ClInclude Include="include\mathTools.h" />
     <ClInclude Include="include\shader.h" />
     <ClInclude Include="include\webcam.h" />

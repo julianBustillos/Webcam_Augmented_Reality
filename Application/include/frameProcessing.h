@@ -37,25 +37,25 @@ class FrameProcessing {
 public:
 	FrameProcessing(int width, int height);
 	~FrameProcessing();
-	void execute(cv::Mat & frame);
-	cv::Vec2i getRegionOrigin();
-	cv::Vec2i getRegionNumber();
-	std::vector<Edgel> getEdgelList();
-	std::vector<Line> getLineList();
-	std::vector<Line> getMergedLineList();
+	void execute(const cv::Mat & frame);
+	const cv::Vec2i getRegionOrigin() const;
+	const cv::Vec2i getRegionNumber() const;
+	const std::vector<Edgel> getEdgelList() const;
+	const std::vector<Line> getLineList() const;
+	const std::vector<Line> getMergedLineList() const;
 
 private:
 	void reinitNeededRegions();
 	void addEdgel(cv::Vec2i position, float orientation, EdgelType type);
-	void findEdgels(cv::Mat & frame);
-	void scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType type);
-	void getAbsArgmaxList(std::vector<int> &argList, std::vector<int> &scanline);
+	void findEdgels(const cv::Mat & frame);
+	void scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelType type);
+	void getAbsArgmaxList(std::vector<int> &argList, const std::vector<int> &scanline) const;
 	void RANSACGrouper();
 	void initEdgelsList(std::vector<int> & index, int i, int j);
-	HypoLine getHypotheticLine(std::vector<int> & index, std::vector<Edgel> & edgels);
-	int countCompatibleEdgels(HypoLine & line, std::vector<int> & index, std::vector<Edgel> & edgels);
+	HypoLine getHypotheticLine(const std::vector<int> & index, const std::vector<Edgel> & edgels) const;
+	int countCompatibleEdgels(HypoLine & line, const std::vector<int> & index, const std::vector<Edgel> & edgels) const;
 	void mergeLines();
-	void addMergedLines(std::vector<Line> & finalLineList, std::vector<Line> & initialLineList);
+	void addMergedLines(std::vector<Line> & finalLineList, const std::vector<Line> & initialLineList) const;
 
 	// DATA
 	cv::Vec2i frameSize;

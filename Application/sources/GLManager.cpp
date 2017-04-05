@@ -1,6 +1,10 @@
 #include "GLManager.h"
 #include <iostream>
+#include "constants.h"
+
+#ifdef _DEBUG_
 #include "keyboard.h"
+#endif
 
 GLManager::GLManager(cv::Mat & frame) :
 	window(nullptr), frameShader(nullptr)
@@ -24,22 +28,22 @@ GLManager::~GLManager()
 	}
 }
 
-void GLManager::event()
+void GLManager::event() const
 {
 	glfwPollEvents();
 }
 
-bool GLManager::running()
+bool GLManager::running() const
 {
 	return !glfwWindowShouldClose(window);
 }
 
-void GLManager::swapBuffers()
+void GLManager::swapBuffers() const
 {
 	glfwSwapBuffers(window);
 }
 
-void GLManager::drawFrame(cv::Mat & frame)
+void GLManager::drawFrame(const cv::Mat & frame) const
 {
 	// Clear the colorbuffer
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -85,9 +89,11 @@ void GLManager::initContext(int width, int height)
 
 	glfwMakeContextCurrent(window);
 
+#ifdef _DEBUG_
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+#endif
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -151,7 +157,7 @@ void GLManager::initFrameQuad()
 	glBindVertexArray(0); // Unbind VAO
 }
 
-void GLManager::initTexture(cv::Mat & frame)
+void GLManager::initTexture(const cv::Mat & frame)
 {
 	// Load and create a texture 
 	glGenTextures(1, &frameTexture);

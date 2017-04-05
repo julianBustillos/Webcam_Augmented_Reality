@@ -18,12 +18,12 @@ Webcam::~Webcam()
 {
 }
 
-int Webcam::getWidth()
+int Webcam::getWidth() const
 {
 	return (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
 }
 
-int Webcam::getHeight()
+int Webcam::getHeight() const
 {
 	return (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 }

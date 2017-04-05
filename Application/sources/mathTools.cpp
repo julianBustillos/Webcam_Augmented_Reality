@@ -1,8 +1,8 @@
 #include "mathTools.h"
-#include "macros.h"
+#include "constants.h"
 
 
-int MathTools::convolution(cv::Mat & frame, cv::Vec2i & frameSize, std::vector<int> & filter, cv::Vec2i & position, cv::Vec2i & scanDir, int channel)
+int MathTools::convolution(const cv::Mat & frame, const cv::Vec2i & frameSize, const std::vector<int> & filter, const cv::Vec2i & position, const cv::Vec2i & scanDir, int channel)
 {
 	int offset = (int)floor(filter.size() / 2.0f);
 	int sum = 0;

@@ -10,10 +10,10 @@ class GLManager {
 public:
 	GLManager(cv::Mat & frame);
 	~GLManager();
-	void event();
-	bool running();
-	void swapBuffers();
-	void drawFrame(cv::Mat & frame);
+	void event() const;
+	bool running() const;
+	void swapBuffers() const;
+	void drawFrame(const cv::Mat & frame) const;
 
 private:
 	GLFWwindow* window;
@@ -25,5 +25,5 @@ private:
 	void initContext(int width, int height);
 	void initShaders();
 	void initFrameQuad();
-	void initTexture(cv::Mat & frame);
+	void initTexture(const cv::Mat & frame);
 };

@@ -1,0 +1,40 @@
+#pragma once
+
+#include <vector>
+
+
+// ACTIVATE DEBUG MODE
+#define _DEBUG_
+
+
+// DEBUG TYPE
+#ifdef _DEBUG_
+#define CONST
+#else
+#define CONST const
+#endif
+
+
+// TROGONOMETRY
+#define M_PI (float)3.14159265358979323846
+
+
+class CONSTANTS {
+public:
+	// MARKER ID
+	static const int ARTAG_ID;
+	// EDGELS DETECTION PARAMETERS
+	static CONST int REGION_PIXEL_SIZE;
+	static CONST int SCANLINE_STRIDE;
+	static CONST std::vector<int> FILTER;
+	static CONST int INTENSITY_THRESHOLD;
+	static CONST int CHANNEL_GAP_THRESHOLD;
+
+	// RANSAC GROUPER PARAMETERS
+	static CONST float ORIENTATION_TOLERANCE;
+	static CONST int HYPOLINE_ATTEMPTS;
+	static CONST float POINT_LINE_DIST_TOLERANCE;
+	static CONST int DOMINANT_LINE_SEARCH_ATTEMPTS;
+	static CONST int MIN_DOMINANT_LINE_VOTES;
+	static CONST int MAX_LINE_SEARCH_ITER;
+};

@@ -1,24 +1,22 @@
 #include <iostream>
 #include "webcam.h"
 #include "GLManager.h"
-#include <macros.h>
-#include "debugInfo.h"
+#include <constants.h>
 #include "frameProcessing.h"
 #include <stdlib.h>
 #include <time.h>
 
-DebugInfo *info = nullptr;
+#ifdef _DEBUG_
+#include "debugInfo.h"
+DebugInfo info;
+#endif
 
 
 int main(int argc, char *argv[])
 {
-
-
 	// Initialization
+	std::cout << "INITIALIZATION..." << std::endl;
 	std::srand((int)time(NULL));
-	if (DEBUG) {
-		info = new DebugInfo();
-	}
 	Webcam webcam;
 	GLManager glManager(webcam.getFrame());
 	FrameProcessing processing(webcam.getWidth(), webcam.getHeight());
@@ -29,9 +27,9 @@ int main(int argc, char *argv[])
 		glManager.event();
 		webcam.read();
 		processing.execute(webcam.getFrame());
-		if (info) {
-			info->printOnFrame(webcam.getFrame(), processing);
-		}
+#ifdef _DEBUG_
+		info.printOnFrame(webcam.getFrame(), processing);
+#endif
 		glManager.drawFrame(webcam.getFrame());
 		glManager.swapBuffers();
 	}

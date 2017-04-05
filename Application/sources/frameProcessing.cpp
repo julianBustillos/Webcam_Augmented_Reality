@@ -1,5 +1,5 @@
 #include "frameProcessing.h"
-#include "macros.h"
+#include "constants.h"
 #include <iostream>
 #include "mathTools.h"
 #include "debugInfo.h"
@@ -11,8 +11,8 @@ FrameProcessing::FrameProcessing(int width, int height)
 	frameSize[1] = width;
 	regionOrigin[0] = 0;
 	regionOrigin[1] = 0;
-	regionNumber[0] = (int)ceil((float)height / REGION_PIXEL_SIZE);
-	regionNumber[1] = (int)ceil((float)width / REGION_PIXEL_SIZE);
+	regionNumber[0] = (int)ceil((float)height / CONSTANTS::REGION_PIXEL_SIZE);
+	regionNumber[1] = (int)ceil((float)width / CONSTANTS::REGION_PIXEL_SIZE);
 	
 	regionGrid.resize(regionNumber[0]);
 	for (int i = 0; i < regionGrid.size(); i++) {
@@ -26,29 +26,29 @@ FrameProcessing::~FrameProcessing()
 {
 }
 
-void FrameProcessing::execute(cv::Mat & frame)
+void FrameProcessing::execute(const cv::Mat & frame)
 {
 	findEdgels(frame);
 	RANSACGrouper();
 	mergeLines();
 }
 
-cv::Vec2i FrameProcessing::getRegionOrigin()
+const cv::Vec2i FrameProcessing::getRegionOrigin() const
 {
 	return regionOrigin;
 }
 
-cv::Vec2i FrameProcessing::getRegionNumber()
+const cv::Vec2i FrameProcessing::getRegionNumber() const
 {
 	return regionNumber;
 }
 
-std::vector<Line> FrameProcessing::getMergedLineList()
+const std::vector<Line> FrameProcessing::getMergedLineList() const
 {
 	return mergedLines;
 }
 
-std::vector<Edgel> FrameProcessing::getEdgelList()
+const std::vector<Edgel> FrameProcessing::getEdgelList() const
 {
 	std::vector<Edgel> edgelList;
 	edgelList.clear();
@@ -64,7 +64,7 @@ std::vector<Edgel> FrameProcessing::getEdgelList()
 	return edgelList;
 }
 
-std::vector<Line> FrameProcessing::getLineList()
+const std::vector<Line> FrameProcessing::getLineList() const
 {
 	std::vector<Line> lineList;
 	lineList.clear();
@@ -98,13 +98,13 @@ void FrameProcessing::addEdgel(cv::Vec2i position, float orientation, EdgelType 
 	edgel.type = type;
 
 	cv::Vec2i regionIndex;
-	regionIndex[0] = (int)floor((float)(position[0]-regionOrigin[0]) / REGION_PIXEL_SIZE);
-	regionIndex[1] = (int)floor((float)(position[1]-regionOrigin[1]) / REGION_PIXEL_SIZE);
+	regionIndex[0] = (int)floor((float)(position[0]-regionOrigin[0]) / CONSTANTS::REGION_PIXEL_SIZE);
+	regionIndex[1] = (int)floor((float)(position[1]-regionOrigin[1]) / CONSTANTS::REGION_PIXEL_SIZE);
 
 	regionGrid[regionIndex[0]][regionIndex[1]].edgels.push_back(edgel);
 }
 
-void FrameProcessing::findEdgels(cv::Mat & frame)
+void FrameProcessing::findEdgels(const cv::Mat & frame)
 {
 	reinitNeededRegions();
 	cv::Vec2i verticalScanDir(1, 0);
@@ -113,20 +113,20 @@ void FrameProcessing::findEdgels(cv::Mat & frame)
 	scanLines(frame, horizontalScanDir, EdgelType::vertical);
 }
 
-void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType type)
+void FrameProcessing::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelType type)
 {
 	cv::Vec2i strideDir = cv::Vec2i(1, 1) - scanDir;
 	int strideIdxFirst = regionOrigin.dot(strideDir);
-	int strideIdxLast = std::min(strideIdxFirst + regionNumber.dot(strideDir) * REGION_PIXEL_SIZE, frameSize.dot(strideDir));
+	int strideIdxLast = std::min(strideIdxFirst + regionNumber.dot(strideDir) * CONSTANTS::REGION_PIXEL_SIZE, frameSize.dot(strideDir));
 
 	int scanIdxFirst = regionOrigin.dot(scanDir);
-	int scanIdxLast = std::min(scanIdxFirst + regionNumber.dot(scanDir) * REGION_PIXEL_SIZE, frameSize.dot(scanDir));
+	int scanIdxLast = std::min(scanIdxFirst + regionNumber.dot(scanDir) * CONSTANTS::REGION_PIXEL_SIZE, frameSize.dot(scanDir));
 	std::vector<int> scanline(scanIdxLast - scanIdxFirst);
 
-	std::vector<int> filter = FILTER;
+	std::vector<int> filter = CONSTANTS::FILTER;
 	std::vector<int> argList;
 
-	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += SCANLINE_STRIDE) {
+	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += CONSTANTS::SCANLINE_STRIDE) {
 		for (int scanIdx = 0; scanIdx < scanline.size(); scanIdx++) {
 
 			// Get all scanline values
@@ -143,8 +143,8 @@ void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType ty
 			int channel1Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 1);
 			int channel2Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 2);
 
-			if (abs(scanline[argList[argIdx]] - channel1Val) < CHANNEL_GAP_THRESHOLD
-				&& abs(scanline[argList[argIdx]] - channel2Val) < CHANNEL_GAP_THRESHOLD) {
+			if (abs(scanline[argList[argIdx]] - channel1Val) < CONSTANTS::CHANNEL_GAP_THRESHOLD
+				&& abs(scanline[argList[argIdx]] - channel2Val) < CONSTANTS::CHANNEL_GAP_THRESHOLD) {
 				// Create new edgel
 				int strideDirVal = MathTools::convolution(frame, frameSize, filter, position, strideDir, 0);
 				float orientation = MathTools::edgelOrientation(scanline[argList[argIdx]], strideDirVal, type);
@@ -155,7 +155,7 @@ void FrameProcessing::scanLines(cv::Mat & frame, cv::Vec2i scanDir, EdgelType ty
 	}
 }
 
-void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, std::vector<int>& scanline)
+void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, const std::vector<int>& scanline) const
 {
 	int currentArgmax = -1;
 	int currentMax = -1;
@@ -164,7 +164,7 @@ void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, std::vector<in
 
 	for (int k = 0; k < scanline.size(); k++) {
 		temp = abs(scanline[k]);
-		if (temp < INTENSITY_THRESHOLD) {
+		if (temp < CONSTANTS::INTENSITY_THRESHOLD) {
 			if (currentArgmax >= 0) {
 				argList.push_back(currentArgmax);
 				currentMax = -1;
@@ -192,12 +192,12 @@ void FrameProcessing::RANSACGrouper()
 			initEdgelsList(index, i, j);
 			iterations = 0;
 
-			while (++iterations < MAX_LINE_SEARCH_ITER && index.size() > 2) {
+			while (++iterations < CONSTANTS::MAX_LINE_SEARCH_ITER && index.size() > 2) {
 
 				// Search dominant line
 				maxVotes = -1;
 
-				for (int id = 0; id < DOMINANT_LINE_SEARCH_ATTEMPTS; id++) {
+				for (int id = 0; id < CONSTANTS::DOMINANT_LINE_SEARCH_ATTEMPTS; id++) {
 					line = getHypotheticLine(index, regionGrid[i][j].edgels);
 					if (line.id1 < 0) {
 						break;
@@ -211,7 +211,7 @@ void FrameProcessing::RANSACGrouper()
 				}
 
 				// Add dominant line and remove edgels OR no dominant line
-				if (maxVotes >= MIN_DOMINANT_LINE_VOTES) {
+				if (maxVotes >= CONSTANTS::MIN_DOMINANT_LINE_VOTES) {
 					Line newLine;
 					newLine.p1 = regionGrid[i][j].edgels[index[dominantLine.id1]].position;
 					newLine.p2 = regionGrid[i][j].edgels[index[dominantLine.id2]].position;
@@ -238,7 +238,7 @@ void FrameProcessing::initEdgelsList(std::vector<int>& index, int i, int j)
 	}
 }
 
-HypoLine FrameProcessing::getHypotheticLine(std::vector<int>& index, std::vector<Edgel> & edgels)
+HypoLine FrameProcessing::getHypotheticLine(const std::vector<int>& index, const std::vector<Edgel> & edgels) const
 {
 	int id1 = 0, id2 = 0;
 	float or1 = 0.0f, or2 = 0.0f;
@@ -259,9 +259,9 @@ HypoLine FrameProcessing::getHypotheticLine(std::vector<int>& index, std::vector
 		float diffL1 = MathTools::orientationDiff(lineOr, or1);
 		float diffL2 = MathTools::orientationDiff(lineOr, or2);
 		
-		oriOK = (diffL1 < ORIENTATION_TOLERANCE) && (diffL2 < ORIENTATION_TOLERANCE);
+		oriOK = (diffL1 < CONSTANTS::ORIENTATION_TOLERANCE) && (diffL2 < CONSTANTS::ORIENTATION_TOLERANCE);
 
-		if (count++ >= HYPOLINE_ATTEMPTS) {
+		if (count++ >= CONSTANTS::HYPOLINE_ATTEMPTS) {
 			line.id1 = -1;
 			return line;
 		}
@@ -274,7 +274,7 @@ HypoLine FrameProcessing::getHypotheticLine(std::vector<int>& index, std::vector
 	return line;
 }
 
-int FrameProcessing::countCompatibleEdgels(HypoLine & line, std::vector<int>& index, std::vector<Edgel>& edgels)
+int FrameProcessing::countCompatibleEdgels(HypoLine & line, const std::vector<int>& index, const std::vector<Edgel>& edgels) const
 {
 	line.nonVotersId.clear();
 	int count = 0;
@@ -288,13 +288,13 @@ int FrameProcessing::countCompatibleEdgels(HypoLine & line, std::vector<int>& in
 		}
 		
 		orDiff = MathTools::orientationDiff(line.orientation, edgels[index[idx]].orientation);
-		if (abs(orDiff) > ORIENTATION_TOLERANCE) {
+		if (abs(orDiff) > CONSTANTS::ORIENTATION_TOLERANCE) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
 
 		dist = MathTools::pointLineDistance(edgels[index[line.id1]].position, edgels[index[line.id2]].position, edgels[index[idx]].position);
-		if (dist > POINT_LINE_DIST_TOLERANCE) {
+		if (dist > CONSTANTS::POINT_LINE_DIST_TOLERANCE) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
@@ -322,7 +322,7 @@ void FrameProcessing::mergeLines()
 	addMergedLines(mergedLines, regionMergedLines);
 }
 
-void FrameProcessing::addMergedLines(std::vector<Line>& finalLineList, std::vector<Line>& initialLineList)
+void FrameProcessing::addMergedLines(std::vector<Line>& finalLineList, const std::vector<Line>& initialLineList) const
 {
 	//TODO
 }

@@ -28,17 +28,20 @@ public:
 	~DebugInfo();
 	void nextFPS();
 	void nextMode();
-	void printOnFrame(cv::Mat & frame, FrameProcessing & processing);
+	void printOnFrame(cv::Mat & frame, const FrameProcessing & processing);
+	void parametersWindow();
 
 private:
 	void updateFPS();
-	void print(cv::Mat & frame, FrameProcessing & processing);
-	void printRegions(cv::Mat & frame, FrameProcessing & processing);
-	void printEdgels(cv::Mat & frame, FrameProcessing & processing);
-	void printEdgel(cv::Mat & frame, cv::Vec2i position, cv::Scalar color);
-	void printLines(cv::Mat & frame, FrameProcessing & processing);
-	void printLineList(cv::Mat & frame, std::vector<Line> & lineList, cv::Scalar color);
-	void printMergedLines(cv::Mat & frame, FrameProcessing & processing);
+	void print(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printRegions(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printEdgels(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::Scalar color) const;
+	void printLines(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printLineList(cv::Mat & frame, const std::vector<Line> & lineList, const cv::Scalar color) const;
+	void printMergedLines(cv::Mat & frame, const FrameProcessing & processing) const;
+	void openParametersWindow() const;
+	void closeParametersWindow() const;
 
 	// DATA
 	FPS fps;
@@ -47,4 +50,6 @@ private:
 	time_t end;
 	int fpsCounter;
 	int actualFps;
+	bool isWindowOpen;
+	const std::string windowName;
 };

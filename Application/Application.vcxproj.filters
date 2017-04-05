@@ -39,6 +39,9 @@
     <ClCompile Include="sources\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -56,9 +59,6 @@
     <ClInclude Include="include\keyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\macros.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\debugInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -66,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mathTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
