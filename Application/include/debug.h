@@ -3,8 +3,7 @@
 /*
 DEBUG VALUES :
 0 - No debug
-1 - Debug without acces to parameters window
-2 - Debug with acces to parameters window
+1 - Debug mode
 */
 
 #define DEBUG 1

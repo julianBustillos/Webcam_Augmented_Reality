@@ -3,7 +3,7 @@
 #include "webcam.h"
 #include "GLManager.h"
 #include <constants.h>
-#include "frameProcessing.h"
+#include "cornerDetector.h"
 #include <stdlib.h>
 #include <time.h>
 
@@ -20,16 +20,16 @@ int main(int argc, char *argv[])
 	std::srand((int)time(NULL));
 	Webcam webcam;
 	GLManager glManager(webcam.getFrame());
-	FrameProcessing processing(webcam.getWidth(), webcam.getHeight());
+	CornerDetector detector(webcam.getWidth(), webcam.getHeight());
 	std::cout << "INITIALIZATION ENDED" << std::endl << std::endl;
 
 	// Main loop
 	while (glManager.running()) {
 		glManager.event();
 		webcam.read();
-		processing.execute(webcam.getFrame());
+		detector.execute(webcam.getFrame());
 #ifdef DEBUG
-		info.printOnFrame(webcam.getFrame(), processing);
+		info.printOnFrame(webcam.getFrame(), detector);
 #endif
 		glManager.drawFrame(webcam.getFrame());
 		glManager.swapBuffers();

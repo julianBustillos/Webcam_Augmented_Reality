@@ -1,8 +1,8 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
-#include <time.h>
-#include "frameProcessing.h"
+#include "cornerDetector.h"
+#include <chrono>
 
 
 enum class FPS {
@@ -28,26 +28,29 @@ public:
 	~DebugInfo();
 	void nextFPS();
 	void nextMode();
-	void printOnFrame(cv::Mat & frame, const FrameProcessing & processing);
+	void printOnFrame(cv::Mat & frame, const CornerDetector & detector);
 	void parametersWindow();
 
 private:
-	void updateFPS();
-	void print(cv::Mat & frame, const FrameProcessing & processing) const;
-	void printRegions(cv::Mat & frame, const FrameProcessing & processing) const;
-	void printEdgels(cv::Mat & frame, const FrameProcessing & processing) const;
+	void updateFPS(const CornerDetector & detector);
+	void print(cv::Mat & frame, const CornerDetector & detector) const;
+	void printFPS(cv::Mat & frame, const CornerDetector & detector) const;
+	void printRegions(cv::Mat & frame, const CornerDetector & detector) const;
+	void printEdgels(cv::Mat & frame, const CornerDetector & detector) const;
 	void printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::Scalar color) const;
-	void printLines(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printLineList(cv::Mat & frame, const std::vector<Line> & lineList, const cv::Scalar color) const;
-	void printMergedLines(cv::Mat & frame, const FrameProcessing & processing) const;
+	void printMergedLines(cv::Mat & frame, const CornerDetector & detector) const;
 
 	// DATA
 	FPS fps;
 	Mode mode;
-	time_t start;
-	time_t end;
+	std::chrono::steady_clock::time_point start;
+	std::chrono::steady_clock::time_point end;
 	int fpsCounter;
-	int actualFps;
+	int realFps;
+	int theoricalFps;
+	double execTime;
 	const std::string windowName;
 };
 

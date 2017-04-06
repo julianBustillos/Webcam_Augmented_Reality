@@ -1,11 +1,17 @@
-#include "frameProcessing.h"
+#include "cornerDetector.h"
+#include "debug.h"
 #include "constants.h"
 #include <iostream>
 #include "mathTools.h"
-#include "debugInfo.h"
+#include <chrono>
+
+#ifdef DEBUG
+#include <time.h>
+#endif
 
 
-FrameProcessing::FrameProcessing(int width, int height)
+CornerDetector::CornerDetector(int width, int height) :
+	lastExecTime(0.0)
 {
 	frameSize[0] = height;
 	frameSize[1] = width;
@@ -22,33 +28,42 @@ FrameProcessing::FrameProcessing(int width, int height)
 	std::cout << "Region grid size : " << regionNumber[0] << "*" << regionNumber[1] << std::endl;
 }
 
-FrameProcessing::~FrameProcessing()
+CornerDetector::~CornerDetector()
 {
 }
 
-void FrameProcessing::execute(const cv::Mat & frame)
+void CornerDetector::execute(const cv::Mat & frame)
 {
+#ifdef DEBUG
+	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+#endif
+
 	findEdgels(frame);
 	RANSACGrouper();
 	mergeLines();
+
+#ifdef DEBUG
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	lastExecTime = std::chrono::duration<double>(end - start).count();
+#endif
 }
 
-const cv::Vec2i FrameProcessing::getRegionOrigin() const
+const cv::Vec2i CornerDetector::getRegionOrigin() const
 {
 	return regionOrigin;
 }
 
-const cv::Vec2i FrameProcessing::getRegionNumber() const
+const cv::Vec2i CornerDetector::getRegionNumber() const
 {
 	return regionNumber;
 }
 
-const std::vector<Line> FrameProcessing::getMergedLineList() const
+const std::vector<Line> CornerDetector::getMergedLineList() const
 {
 	return mergedLines;
 }
 
-const std::vector<Edgel> FrameProcessing::getEdgelList() const
+const std::vector<Edgel> CornerDetector::getEdgelList() const
 {
 	std::vector<Edgel> edgelList;
 	edgelList.clear();
@@ -64,7 +79,7 @@ const std::vector<Edgel> FrameProcessing::getEdgelList() const
 	return edgelList;
 }
 
-const std::vector<Line> FrameProcessing::getLineList() const
+const std::vector<Line> CornerDetector::getLineList() const
 {
 	std::vector<Line> lineList;
 	lineList.clear();
@@ -80,7 +95,7 @@ const std::vector<Line> FrameProcessing::getLineList() const
 	return lineList;
 }
 
-void FrameProcessing::reinitNeededRegions()
+void CornerDetector::reinitNeededRegions()
 {
 	for (int i = 0; i < regionNumber[0]; i++) {
 		for (int j = 0; j < regionNumber[1]; j++) {
@@ -90,7 +105,7 @@ void FrameProcessing::reinitNeededRegions()
 	}
 }
 
-void FrameProcessing::addEdgel(cv::Vec2i position, float orientation, EdgelType type)
+void CornerDetector::addEdgel(cv::Vec2i position, float orientation, EdgelType type)
 {
 	Edgel edgel;
 	edgel.position = position;
@@ -104,7 +119,7 @@ void FrameProcessing::addEdgel(cv::Vec2i position, float orientation, EdgelType 
 	regionGrid[regionIndex[0]][regionIndex[1]].edgels.push_back(edgel);
 }
 
-void FrameProcessing::findEdgels(const cv::Mat & frame)
+void CornerDetector::findEdgels(const cv::Mat & frame)
 {
 	reinitNeededRegions();
 	cv::Vec2i verticalScanDir(1, 0);
@@ -113,7 +128,7 @@ void FrameProcessing::findEdgels(const cv::Mat & frame)
 	scanLines(frame, horizontalScanDir, EdgelType::vertical);
 }
 
-void FrameProcessing::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelType type)
+void CornerDetector::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelType type)
 {
 	cv::Vec2i strideDir = cv::Vec2i(1, 1) - scanDir;
 	int strideIdxFirst = regionOrigin.dot(strideDir);
@@ -155,7 +170,7 @@ void FrameProcessing::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelT
 	}
 }
 
-void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, const std::vector<int>& scanline) const
+void CornerDetector::getAbsArgmaxList(std::vector<int>& argList, const std::vector<int>& scanline) const
 {
 	int currentArgmax = -1;
 	int currentMax = -1;
@@ -178,7 +193,7 @@ void FrameProcessing::getAbsArgmaxList(std::vector<int>& argList, const std::vec
 	}
 }
 
-void FrameProcessing::RANSACGrouper()
+void CornerDetector::RANSACGrouper()
 {
 	std::vector<int> index;
 	HypoLine dominantLine;
@@ -229,7 +244,7 @@ void FrameProcessing::RANSACGrouper()
 	}
 }
 
-void FrameProcessing::initEdgelsList(std::vector<int>& index, int i, int j)
+void CornerDetector::initEdgelsList(std::vector<int>& index, int i, int j)
 {
 	index.resize(regionGrid[i][j].edgels.size());
 
@@ -238,7 +253,7 @@ void FrameProcessing::initEdgelsList(std::vector<int>& index, int i, int j)
 	}
 }
 
-HypoLine FrameProcessing::getHypotheticLine(const std::vector<int>& index, const std::vector<Edgel> & edgels) const
+HypoLine CornerDetector::getHypotheticLine(const std::vector<int>& index, const std::vector<Edgel> & edgels) const
 {
 	int id1 = 0, id2 = 0;
 	float or1 = 0.0f, or2 = 0.0f;
@@ -274,7 +289,7 @@ HypoLine FrameProcessing::getHypotheticLine(const std::vector<int>& index, const
 	return line;
 }
 
-int FrameProcessing::countCompatibleEdgels(HypoLine & line, const std::vector<int>& index, const std::vector<Edgel>& edgels) const
+int CornerDetector::countCompatibleEdgels(HypoLine & line, const std::vector<int>& index, const std::vector<Edgel>& edgels) const
 {
 	line.nonVotersId.clear();
 	int count = 0;
@@ -305,7 +320,7 @@ int FrameProcessing::countCompatibleEdgels(HypoLine & line, const std::vector<in
 	return count;
 }
 
-void FrameProcessing::mergeLines()
+void CornerDetector::mergeLines()
 {
 	std::vector<Line> regionMergedLines;
 	regionMergedLines.clear();
@@ -322,7 +337,12 @@ void FrameProcessing::mergeLines()
 	addMergedLines(mergedLines, regionMergedLines);
 }
 
-void FrameProcessing::addMergedLines(std::vector<Line>& finalLineList, const std::vector<Line>& initialLineList) const
+void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, const std::vector<Line>& initialLineList) const
 {
 	//TODO
+}
+
+double CornerDetector::getLastExecTime() const
+{
+	return lastExecTime;
 }

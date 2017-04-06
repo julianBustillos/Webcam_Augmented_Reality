@@ -33,16 +33,17 @@ struct Region {
 	std::vector<Line> lines;
 };
 
-class FrameProcessing {
+class CornerDetector {
 public:
-	FrameProcessing(int width, int height);
-	~FrameProcessing();
+	CornerDetector(int width, int height);
+	~CornerDetector();
 	void execute(const cv::Mat & frame);
 	const cv::Vec2i getRegionOrigin() const;
 	const cv::Vec2i getRegionNumber() const;
 	const std::vector<Edgel> getEdgelList() const;
 	const std::vector<Line> getLineList() const;
 	const std::vector<Line> getMergedLineList() const;
+	double getLastExecTime() const;
 
 private:
 	void reinitNeededRegions();
@@ -58,6 +59,7 @@ private:
 	void addMergedLines(std::vector<Line> & finalLineList, const std::vector<Line> & initialLineList) const;
 
 	// DATA
+	double lastExecTime;
 	cv::Vec2i frameSize;
 	cv::Vec2i regionOrigin;
 	cv::Vec2i regionNumber;

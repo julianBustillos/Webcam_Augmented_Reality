@@ -135,7 +135,7 @@
   <ItemGroup>
     <ClCompile Include="sources\constants.cpp" />
     <ClCompile Include="sources\debugInfo.cpp" />
-    <ClCompile Include="sources\frameProcessing.cpp" />
+    <ClCompile Include="sources\cornerDetector.cpp" />
     <ClCompile Include="sources\GLManager.cpp" />
     <ClCompile Include="sources\keyboard.cpp" />
     <ClCompile Include="sources\main.cpp" />
@@ -149,7 +149,7 @@
   <ItemGroup>
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\debugInfo.h" />
-    <ClInclude Include="include\frameProcessing.h" />
+    <ClInclude Include="include\cornerDetector.h" />
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />
     <ClInclude Include="include\constants.h" />

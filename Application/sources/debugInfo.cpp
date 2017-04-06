@@ -5,7 +5,9 @@
 
 
 DebugInfo::DebugInfo() :
-	fps(FPS::DISABLED), mode(Mode::NORMAL), start(time(NULL)), end(time(NULL)), fpsCounter(0), actualFps(0),
+	fps(FPS::DISABLED), mode(Mode::NORMAL), 
+	start(std::chrono::steady_clock::now()), end(std::chrono::steady_clock::now()),
+	fpsCounter(0), realFps(0), theoricalFps(0), execTime(0.0),
 	windowName("DEBUG - PARAMETERS")
 {
 	std::cout << "### DEBUG MODE ENABLED ###" << std::endl << std::endl;
@@ -47,21 +49,19 @@ void DebugInfo::nextMode()
 	}
 }
 
-void DebugInfo::printOnFrame(cv::Mat & frame, const FrameProcessing & processing)
+void DebugInfo::printOnFrame(cv::Mat & frame, const CornerDetector & detector)
 {
-	updateFPS();
-	print(frame, processing);
+	updateFPS(detector);
+	print(frame, detector);
 }
 
 void DebugInfo::parametersWindow()
 {
 	// Create window
 	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
-	cv::resizeWindow(windowName, 280, 430);
+	cv::resizeWindow(windowName, 290, 340);
 
 	//Create trackbars
-	cv::createTrackbar("REGION", windowName, nullptr, 300, callbackIntNotNull, PTR(REGION_PIXEL_SIZE));
-	cv::createTrackbar("STRIDE", windowName, nullptr, 50, callbackIntNotNull, PTR(SCANLINE_STRIDE));
 	cv::createTrackbar("INTENSITY", windowName, nullptr, 200, callbackInt, PTR(INTENSITY_THRESHOLD));
 	cv::createTrackbar("CHANNEL", windowName, nullptr, 256, callbackInt, PTR(CHANNEL_GAP_THRESHOLD));
 	cv::createTrackbar("ORIENT", windowName, nullptr, 360, callbackFloatDegree, PTR(ORIENTATION_TOLERANCE));
@@ -72,8 +72,6 @@ void DebugInfo::parametersWindow()
 	cv::createTrackbar("L_SEARCH", windowName, nullptr, 100, callbackInt, PTR(MAX_LINE_SEARCH_ITER));
 
 	// Set trackbars values
-	cv::setTrackbarPos("REGION", windowName, GET(REGION_PIXEL_SIZE));
-	cv::setTrackbarPos("STRIDE", windowName, GET(SCANLINE_STRIDE));
 	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
 	cv::setTrackbarPos("CHANNEL", windowName, GET(CHANNEL_GAP_THRESHOLD));
 	cv::setTrackbarPos("ORIENT", windowName, (int)(GET(ORIENTATION_TOLERANCE) * 180 / M_PI));
@@ -84,56 +82,65 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("L_SEARCH", windowName, GET(MAX_LINE_SEARCH_ITER));
 }
 
-void DebugInfo::updateFPS()
+void DebugInfo::updateFPS(const CornerDetector & detector)
 {
+	end = std::chrono::steady_clock::now();
 	fpsCounter++;
-	end = time(NULL);
-	if (difftime(end, start) >= 1.0) {
-		actualFps = fpsCounter;
+	execTime += detector.getLastExecTime();
+	if (std::chrono::duration<double>(end - start).count() >= 1.0) {
+		realFps = (int)ceil(fpsCounter / std::chrono::duration<double>(end - start).count());
+		theoricalFps = (int)ceil(fpsCounter / execTime);
 		fpsCounter = 0;
 		start = end;
+		execTime = 0.0;
 	}
 }
 
-void DebugInfo::print(cv::Mat & frame, const FrameProcessing & processing) const
+void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 {
 	if (fps == FPS::ENABLED) {
-		cv::putText(frame, "FPS : " + std::to_string(actualFps), cvPoint(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 187, 0));
+		printFPS(frame, detector);
 	}
 
 	switch (mode) {
 	case Mode::REGIONS:
-		printRegions(frame, processing);
+		printRegions(frame, detector);
 		break;
 	case Mode::EDGELS:
-		printEdgels(frame, processing);
+		printEdgels(frame, detector);
 		break;
 	case Mode::LINES:
-		printLines(frame, processing);
+		printLines(frame, detector);
 		break;
 	case Mode::MERGED:
-		printMergedLines(frame, processing);
+		printMergedLines(frame, detector);
 		break;
 	case Mode::SUPERPOSITION:
-		printRegions(frame, processing);
-		printEdgels(frame, processing);
-		printMergedLines(frame, processing);
-		printLines(frame, processing);
+		printRegions(frame, detector);
+		printEdgels(frame, detector);
+		printMergedLines(frame, detector);
+		printLines(frame, detector);
 		break;
 	default:
 		break;
 	}
 }
 
-void DebugInfo::printRegions(cv::Mat & frame, const FrameProcessing & processing) const
+void DebugInfo::printFPS(cv::Mat & frame, const CornerDetector & detector) const
+{
+	cv::putText(frame, "FPS (real)      : " + std::to_string(realFps), cvPoint(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(102, 0, 0));
+	cv::putText(frame, "FPS (theorical) : " + std::to_string(theoricalFps), cvPoint(3, 45), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(204, 0, 102));
+}
+
+void DebugInfo::printRegions(cv::Mat & frame, const CornerDetector & detector) const
 {
 	cv::Scalar orange(255, 128, 0);
 
-	int iMin = std::max(0, processing.getRegionOrigin()[0]);
-	int iMax = std::min(frame.size().height, iMin + processing.getRegionNumber()[0] * GET(REGION_PIXEL_SIZE));
+	int iMin = std::max(0, detector.getRegionOrigin()[0]);
+	int iMax = std::min(frame.size().height, iMin + detector.getRegionNumber()[0] * GET(REGION_PIXEL_SIZE));
 
-	int jMin = std::max(0, processing.getRegionOrigin()[1]);
-	int jMax = std::min(frame.size().width, jMin + processing.getRegionNumber()[1] * GET(REGION_PIXEL_SIZE));
+	int jMin = std::max(0, detector.getRegionOrigin()[1]);
+	int jMax = std::min(frame.size().width, jMin + detector.getRegionNumber()[1] * GET(REGION_PIXEL_SIZE));
 
 	for (int i = iMin; i < iMax; i += GET(REGION_PIXEL_SIZE)) {
 		cv::line(frame, cv::Vec2i(jMin, i), cv::Vec2i(jMax, i), orange, 1);
@@ -144,9 +151,9 @@ void DebugInfo::printRegions(cv::Mat & frame, const FrameProcessing & processing
 	}
 }
 
-void DebugInfo::printEdgels(cv::Mat & frame, const FrameProcessing & processing) const
+void DebugInfo::printEdgels(cv::Mat & frame, const CornerDetector & detector) const
 {
-	std::vector<Edgel> edgelList = processing.getEdgelList();
+	std::vector<Edgel> edgelList = detector.getEdgelList();
 	cv::Scalar blue(255, 0, 0);
 	cv::Scalar green(0, 255, 0);
 
@@ -169,9 +176,9 @@ void DebugInfo::printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::
 	cv::fillPoly(frame, cRectPtr, &nbPts, 1, color);
 }
 
-void DebugInfo::printLines(cv::Mat & frame, const FrameProcessing & processing) const
+void DebugInfo::printLines(cv::Mat & frame, const CornerDetector & detector) const
 {
-	std::vector<Line> lineList = processing.getLineList();
+	std::vector<Line> lineList = detector.getLineList();
 	cv::Scalar red(0, 0, 255);
 
 	printLineList(frame, lineList, red);
@@ -186,9 +193,9 @@ void DebugInfo::printLineList(cv::Mat & frame, const std::vector<Line>& lineList
 	}
 }
 
-void DebugInfo::printMergedLines(cv::Mat & frame, const FrameProcessing & processing) const
+void DebugInfo::printMergedLines(cv::Mat & frame, const CornerDetector & detector) const
 {
-	std::vector<Line> lineList = processing.getMergedLineList();
+	std::vector<Line> lineList = detector.getMergedLineList();
 	cv::Scalar orange(0, 128, 255);
 
 	printLineList(frame, lineList, orange);
