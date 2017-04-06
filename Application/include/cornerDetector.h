@@ -28,6 +28,21 @@ struct HypoLine {
 	std::vector<int> nonVotersId;
 };
 
+struct Merge {
+	int l1Idx;
+	int l2Idx;
+	cv::Vec2i ext1;
+	cv::Vec2i merge1;
+	cv::Vec2i merge2;
+	cv::Vec2i ext2;
+	float dist;
+
+	bool operator < (const Merge & merge) const
+	{
+		return (dist < merge.dist);
+	}
+};
+
 struct Region {
 	std::vector<Edgel> edgels;
 	std::vector<Line> lines;
@@ -56,7 +71,11 @@ private:
 	HypoLine getHypotheticLine(const std::vector<int> & index, const std::vector<Edgel> & edgels) const;
 	int countCompatibleEdgels(HypoLine & line, const std::vector<int> & index, const std::vector<Edgel> & edgels) const;
 	void mergeLines();
-	void addMergedLines(std::vector<Line> & finalLineList, const std::vector<Line> & initialLineList) const;
+	bool compatibleOrientation(Line & l1, Line & l2) const;
+	bool compatibleConnectionOrientation(Line & l1, Line & l2, Merge & merge) const;
+	bool compatibleConnectionPixelsOrientation(Merge & merge) const;
+	void deleteMergedLines(std::vector<Line> & lineList, int l1Idx, int l2Idx) const;
+	void addMergedLines(std::vector<Line> & finalLineList, std::vector<Line> & initialLineList) const;
 
 	// DATA
 	double lastExecTime;

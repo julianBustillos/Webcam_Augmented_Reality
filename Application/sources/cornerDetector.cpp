@@ -337,9 +337,99 @@ void CornerDetector::mergeLines()
 	addMergedLines(mergedLines, regionMergedLines);
 }
 
-void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, const std::vector<Line>& initialLineList) const
-{
+bool CornerDetector::compatibleOrientation(Line & l1, Line & l2) const {
+	return (MathTools::orientationDiff(l1.orientation, l2.orientation) <= GET(ORIENTATION_TOLERANCE));
+}
+
+bool CornerDetector::compatibleConnectionOrientation(Line & l1, Line & l2, Merge & merge) const {
+	merge.dist = MathTools::pointPointDistance(l1.p2, l2.p1);
+	merge.ext1 = l1.p1;
+	merge.merge1 = l1.p2;
+	merge.merge2 = l2.p1;
+	merge.ext2 = l2.p2;
+	float temp;
+
+	temp = MathTools::pointPointDistance(l1.p1, l2.p2);
+	if (temp < merge.dist) {
+		merge.dist = temp;
+		merge.ext1 = l2.p1;
+		merge.merge1 = l2.p2;
+		merge.merge2 = l1.p1;
+		merge.ext2 = l1.p2;
+	}
+
+	float lineOri = MathTools::lineOrientation(merge.merge1, merge.merge2);
+
+	return (abs(l1.orientation - lineOri) < GET(ORIENTATION_TOLERANCE)) && (abs(l2.orientation - lineOri) < GET(ORIENTATION_TOLERANCE));
+}
+
+bool CornerDetector::compatibleConnectionPixelsOrientation(Merge & merge) const {
 	//TODO
+	return true;
+}
+
+void CornerDetector::deleteMergedLines(std::vector<Line>& lineList, int l1Idx, int l2Idx) const
+{
+	int minIdx = std::min(l1Idx, l2Idx);
+	int maxIdx = std::max(l1Idx, l2Idx);
+	int next = 1;
+
+	for (int idx = minIdx; idx < lineList.size() - 2; idx++) {
+		if (idx + next == maxIdx) {
+			next++;
+		}
+		lineList[idx] = lineList[idx + next];
+	}
+	
+	lineList.pop_back();
+	lineList.pop_back();
+}
+
+void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, std::vector<Line>& initialLineList) const
+{
+	Merge merge;
+	Line newLine;
+	std::vector<Merge> merges;
+	bool finished = false;
+	std::vector<Line> temp = initialLineList;
+
+	while (!finished) {
+		merges.clear();
+
+		// Search merge possibilities (with 2 criterions)
+		for (int l1Idx = 0; l1Idx < temp.size(); l1Idx++) {
+			for (int l2Idx = l1Idx + 1; l2Idx < temp.size(); l2Idx++) {
+				if (compatibleOrientation(temp[l1Idx], temp[l2Idx]) && compatibleConnectionOrientation(temp[l1Idx], temp[l2Idx], merge)) {
+					merge.l1Idx = l1Idx;
+					merge.l2Idx = l2Idx;
+					merges.push_back(merge);
+				}
+			}
+		}
+
+		// Sort merges by extremities distances
+		std::sort(merges.begin(), merges.end());
+
+		// Find and apply a merging operation
+		finished = true;
+		for (int mIdx = 0; mIdx < merges.size(); mIdx++) {
+			if (compatibleConnectionPixelsOrientation(merges[mIdx])) {
+				deleteMergedLines(temp, merges[mIdx].l1Idx, merges[mIdx].l2Idx);
+				newLine.p1 = merges[mIdx].ext1;
+				newLine.p2 = merges[mIdx].ext2;
+				newLine.orientation = MathTools::lineOrientation(newLine.p1, newLine.p2);
+				temp.push_back(newLine);
+				finished = false;
+				break;
+			}
+		}
+
+	}
+
+	// Complete final list with new merged lines
+	for (int mlIdx = 0; mlIdx < temp.size(); mlIdx++) {
+		finalLineList.push_back(temp[mlIdx]);
+	}
 }
 
 double CornerDetector::getLastExecTime() const
