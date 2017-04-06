@@ -24,6 +24,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_C:
 		info.parametersWindow();
 		break;
+	case GLFW_KEY_P:
+		info.nextPause();
+		break;
 	default:
 		break;
 	}

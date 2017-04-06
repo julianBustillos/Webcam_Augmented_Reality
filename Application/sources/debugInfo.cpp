@@ -5,7 +5,7 @@
 
 
 DebugInfo::DebugInfo() :
-	fps(FPS::DISABLED), mode(Mode::NORMAL), 
+	fps(Active::DISABLED), mode(Mode::NORMAL), pause(Active::DISABLED),
 	start(std::chrono::steady_clock::now()), end(std::chrono::steady_clock::now()),
 	fpsCounter(0), realFps(0), theoricalFps(0), execTime(0.0),
 	windowName("DEBUG - PARAMETERS")
@@ -19,7 +19,7 @@ DebugInfo::~DebugInfo()
 
 void DebugInfo::nextFPS()
 {
-	fps = FPS(((int)fps + 1) % (int)FPS::SIZE);
+	fps = Active(((int)fps + 1) % (int)Active::SIZE);
 }
 
 void DebugInfo::nextMode()
@@ -47,6 +47,11 @@ void DebugInfo::nextMode()
 	default:
 		break;
 	}
+}
+
+void DebugInfo::nextPause()
+{
+	pause = Active(((int)pause + 1) % (int)Active::SIZE);
 }
 
 void DebugInfo::printOnFrame(cv::Mat & frame, const CornerDetector & detector)
@@ -82,6 +87,11 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("L_SEARCH", windowName, GET(MAX_LINE_SEARCH_ITER));
 }
 
+bool DebugInfo::isPaused() const
+{
+	return pause == Active::ENABLED;
+}
+
 void DebugInfo::updateFPS(const CornerDetector & detector)
 {
 	end = std::chrono::steady_clock::now();
@@ -98,7 +108,7 @@ void DebugInfo::updateFPS(const CornerDetector & detector)
 
 void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 {
-	if (fps == FPS::ENABLED) {
+	if (fps == Active::ENABLED) {
 		printFPS(frame, detector);
 	}
 
@@ -201,6 +211,8 @@ void DebugInfo::printMergedLines(cv::Mat & frame, const CornerDetector & detecto
 	printLineList(frame, lineList, orange);
 }
 
+
+// Callback functions for parameter window
 void callbackInt(int val, void *data) {
 	int *ptr = (int *)data;
 	if (ptr) {

@@ -1,6 +1,11 @@
 #include "webcam.h"
 #include <iostream>
+#include "debug.h"
 
+#ifdef DEBUG
+#include "debugInfo.h"
+extern DebugInfo info;
+#endif
 
 Webcam::Webcam()
 {
@@ -30,8 +35,14 @@ int Webcam::getHeight() const
 
 void Webcam::read()
 {
-	cv::Mat temp;
+#ifndef DEBUG
 	capture.read(temp);
+#else 
+	if (!info.isPaused()) {
+		capture.read(temp);
+	}
+#endif
+
 	if (temp.empty()) {
 		std::cerr << "ERROR! blank frame grabbed" << std::endl;
 	}

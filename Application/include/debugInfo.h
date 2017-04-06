@@ -5,7 +5,7 @@
 #include <chrono>
 
 
-enum class FPS {
+enum class Active {
 	DISABLED,
 	ENABLED,
 	SIZE
@@ -28,8 +28,10 @@ public:
 	~DebugInfo();
 	void nextFPS();
 	void nextMode();
+	void nextPause();
 	void printOnFrame(cv::Mat & frame, const CornerDetector & detector);
 	void parametersWindow();
+	bool isPaused() const;
 
 private:
 	void updateFPS(const CornerDetector & detector);
@@ -43,8 +45,9 @@ private:
 	void printMergedLines(cv::Mat & frame, const CornerDetector & detector) const;
 
 	// DATA
-	FPS fps;
+	Active fps;
 	Mode mode;
+	Active pause;
 	std::chrono::steady_clock::time_point start;
 	std::chrono::steady_clock::time_point end;
 	int fpsCounter;
@@ -54,6 +57,7 @@ private:
 	const std::string windowName;
 };
 
+// Callback functions for parameter window
 void callbackInt(int val, void *data);
 void callbackIntNotNull(int val, void *data);
 void callbackFloatDegree(int val, void *data);

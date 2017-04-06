@@ -12,6 +12,7 @@ public:
 	cv::Mat & getFrame();
 
 private:
+	cv::Mat temp;
 	cv::Mat frame;
 	cv::VideoCapture capture;
 };
