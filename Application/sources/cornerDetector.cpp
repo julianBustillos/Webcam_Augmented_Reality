@@ -40,7 +40,8 @@ void CornerDetector::execute(const cv::Mat & frame)
 
 	findEdgels(frame);
 	RANSACGrouper();
-	mergeLines();
+	mergeLines(frame);
+	extendLines(frame);
 
 #ifdef DEBUG
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -61,6 +62,11 @@ const cv::Vec2i CornerDetector::getRegionNumber() const
 const std::vector<Line> CornerDetector::getMergedLineList() const
 {
 	return mergedLines;
+}
+
+const std::vector<Line> CornerDetector::getExtendedLineList() const
+{
+	return extendedLines;
 }
 
 const std::vector<Edgel> CornerDetector::getEdgelList() const
@@ -276,7 +282,7 @@ HypoLine CornerDetector::getHypotheticLine(const std::vector<int>& index, const 
 		
 		oriOK = (diffL1 < GET(ORIENTATION_TOLERANCE)) && (diffL2 < GET(ORIENTATION_TOLERANCE));
 
-		if (count++ >= GET(HYPOLINE_ATTEMPTS)) {
+		if (count++ > GET(HYPOLINE_ATTEMPTS)) {
 			line.id1 = -1;
 			return line;
 		}
@@ -320,25 +326,26 @@ int CornerDetector::countCompatibleEdgels(HypoLine & line, const std::vector<int
 	return count;
 }
 
-void CornerDetector::mergeLines()
+void CornerDetector::mergeLines(const cv::Mat & frame)
 {
 	std::vector<Line> regionMergedLines;
 	regionMergedLines.clear();
 	mergedLines.clear();
+	std::vector<int> filter = GET(FILTER);
 
 	// Merge lines by region
 	for (int i = 0; i < regionNumber[0]; i++) {
 		for (int j = 0; j < regionNumber[1]; j++) {
-			addMergedLines(regionMergedLines, regionGrid[i][j].lines);
+			addMergedLines(frame, filter, regionMergedLines, regionGrid[i][j].lines);
 		}
 	}
 
 	// Merge all lines
-	addMergedLines(mergedLines, regionMergedLines);
+	addMergedLines(frame, filter, mergedLines, regionMergedLines);
 }
 
 bool CornerDetector::compatibleOrientation(Line & l1, Line & l2) const {
-	return (MathTools::orientationDiff(l1.orientation, l2.orientation) <= GET(ORIENTATION_TOLERANCE));
+	return (MathTools::orientationDiff(l1.orientation, l2.orientation) < GET(ORIENTATION_TOLERANCE));
 }
 
 bool CornerDetector::compatibleConnectionOrientation(Line & l1, Line & l2, Merge & merge) const {
@@ -360,11 +367,70 @@ bool CornerDetector::compatibleConnectionOrientation(Line & l1, Line & l2, Merge
 
 	float lineOri = MathTools::lineOrientation(merge.merge1, merge.merge2);
 
-	return (abs(l1.orientation - lineOri) < GET(ORIENTATION_TOLERANCE)) && (abs(l2.orientation - lineOri) < GET(ORIENTATION_TOLERANCE));
+	return (MathTools::orientationDiff(l1.orientation, lineOri) < GET(ORIENTATION_TOLERANCE)) && (MathTools::orientationDiff(l2.orientation, lineOri) < GET(ORIENTATION_TOLERANCE));
 }
 
-bool CornerDetector::compatibleConnectionPixelsOrientation(Merge & merge) const {
-	//TODO
+bool CornerDetector::compatibleConnectionPixelsOrientation(const cv::Mat & frame, std::vector<int> & filter, Merge & merge) const {
+	merge.orientation = MathTools::lineOrientation(merge.ext1, merge.ext2);
+	int X = merge.merge1[0];
+	int Y = merge.merge1[1];
+	float tDeltaX, tDeltaY;
+	float tMaxX, tMaxY;
+	int stepX, stepY;
+	int convolution[2];
+	float orientation;
+
+	if (merge.merge2[0] == X) {
+		tDeltaX = 0;
+	}
+	else {
+		tDeltaX = 1.0f / abs(merge.merge2[0] - X);
+	}
+	tMaxX = tDeltaX / 2.0f;
+
+	if (merge.merge2[1] == Y) {
+		tDeltaY = 0;
+	}
+	else {
+		tDeltaY = 1.0f / abs(merge.merge2[1] - Y);
+	}
+	tMaxY = tDeltaY / 2.0f;
+
+	if (merge.merge2[0] > X) {
+		stepX = 1;
+	}
+	else {
+		stepX = -1;
+	}
+	if (merge.merge2[1] > Y) {
+		stepY = 1;
+	}
+	else {
+		stepY = -1;
+	}
+
+	while (true) {
+		if (tMaxX < tMaxY) {
+			tMaxX += tDeltaX;
+			X += stepX;
+		}
+		else {
+			tMaxY += tDeltaY;
+			Y += stepY;
+		}
+
+		if (X == merge.merge2[0] && Y == merge.merge2[1]) {
+			break;
+		}
+
+		convolution[0] = MathTools::convolution(frame, frameSize, filter, cv::Vec2i(X, Y), cv::Vec2i(1, 0), 0);
+		convolution[1] = MathTools::convolution(frame, frameSize, filter, cv::Vec2i(X, Y), cv::Vec2i(0, 1), 0);
+		orientation = MathTools::edgelOrientation(convolution[0], convolution[1], EdgelType::horizontal);
+		if (MathTools::orientationDiff(orientation, merge.orientation) > GET(ORIENTATION_TOLERANCE)) {
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -385,7 +451,7 @@ void CornerDetector::deleteMergedLines(std::vector<Line>& lineList, int l1Idx, i
 	lineList.pop_back();
 }
 
-void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, std::vector<Line>& initialLineList) const
+void CornerDetector::addMergedLines(const cv::Mat & frame, std::vector<int> & filter, std::vector<Line>& finalLineList, std::vector<Line>& initialLineList) const
 {
 	Merge merge;
 	Line newLine;
@@ -413,11 +479,11 @@ void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, std::vecto
 		// Find and apply a merging operation
 		finished = true;
 		for (int mIdx = 0; mIdx < merges.size(); mIdx++) {
-			if (compatibleConnectionPixelsOrientation(merges[mIdx])) {
+			if (compatibleConnectionPixelsOrientation(frame, filter, merges[mIdx])) {
 				deleteMergedLines(temp, merges[mIdx].l1Idx, merges[mIdx].l2Idx);
 				newLine.p1 = merges[mIdx].ext1;
 				newLine.p2 = merges[mIdx].ext2;
-				newLine.orientation = MathTools::lineOrientation(newLine.p1, newLine.p2);
+				newLine.orientation = merges[mIdx].orientation;
 				temp.push_back(newLine);
 				finished = false;
 				break;
@@ -430,6 +496,12 @@ void CornerDetector::addMergedLines(std::vector<Line>& finalLineList, std::vecto
 	for (int mlIdx = 0; mlIdx < temp.size(); mlIdx++) {
 		finalLineList.push_back(temp[mlIdx]);
 	}
+}
+
+void CornerDetector::extendLines(const cv::Mat & frame)
+{
+	extendedLines.clear();
+	//TODO
 }
 
 double CornerDetector::getLastExecTime() const

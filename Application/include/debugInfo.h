@@ -17,6 +17,7 @@ enum class Mode {
 	EDGELS,
 	LINES,
 	MERGED,
+	EXTENDED,
 	SUPERPOSITION,
 	SIZE
 };
@@ -43,6 +44,7 @@ private:
 	void printLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printLineList(cv::Mat & frame, const std::vector<Line> & lineList, const cv::Scalar color) const;
 	void printMergedLines(cv::Mat & frame, const CornerDetector & detector) const;
+	void printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const;
 
 	// DATA
 	Active fps;

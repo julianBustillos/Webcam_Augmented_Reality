@@ -69,7 +69,7 @@ float MathTools::pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p)
 	return temp;
 }
 
-float MathTools::poinPointDistance(cv::Vec2i p1, cv::Vec2i p2)
+float MathTools::pointPointDistance(cv::Vec2i p1, cv::Vec2i p2)
 {
 	cv::Vec2i delta = p2 - p1;
 	return (float)sqrt(delta[0] * delta[0] + delta[1] * delta[1]);

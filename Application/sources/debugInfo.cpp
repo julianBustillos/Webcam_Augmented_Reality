@@ -41,6 +41,9 @@ void DebugInfo::nextMode()
 	case Mode::MERGED:
 		std::cout << "MERGED MODE" << std::endl;
 		break;
+	case Mode::EXTENDED:
+		std::cout << "EXTENDED MODE" << std::endl;
+		break;
 	case Mode::SUPERPOSITION:
 		std::cout << "SUPERPOSITION MODE" << std::endl;
 		break;
@@ -125,9 +128,13 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 	case Mode::MERGED:
 		printMergedLines(frame, detector);
 		break;
+	case Mode::EXTENDED:
+		printExtendedLines(frame, detector);
+		break;
 	case Mode::SUPERPOSITION:
 		printRegions(frame, detector);
 		printEdgels(frame, detector);
+		printExtendedLines(frame, detector);
 		printMergedLines(frame, detector);
 		printLines(frame, detector);
 		break;
@@ -209,6 +216,14 @@ void DebugInfo::printMergedLines(cv::Mat & frame, const CornerDetector & detecto
 	cv::Scalar orange(0, 128, 255);
 
 	printLineList(frame, lineList, orange);
+}
+
+void DebugInfo::printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const
+{
+	std::vector<Line> lineList;
+	cv::Scalar yellow(0, 255, 255);
+
+	printLineList(frame, lineList, yellow);
 }
 
 

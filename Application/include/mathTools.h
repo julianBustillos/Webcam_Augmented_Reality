@@ -14,5 +14,5 @@ public:
 	static float edgelOrientation(int scanDirVal, int strideDirVal, EdgelType type);
 	static float lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2);
 	static float pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p);
-	static float poinPointDistance(cv::Vec2i p1, cv::Vec2i p2);
+	static float pointPointDistance(cv::Vec2i p1, cv::Vec2i p2);
 };
