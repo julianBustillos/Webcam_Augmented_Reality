@@ -54,6 +54,15 @@ float MathTools::edgelOrientation(int scanDirVal, int strideDirVal, EdgelType ty
 	return orientation;
 }
 
+int MathTools::grayScaleValue(const cv::Mat & frame, cv::Vec2i point)
+{
+	int B = frame.at<cv::Vec3b>(point)[0];
+	int G = frame.at<cv::Vec3b>(point)[1];
+	int R = frame.at<cv::Vec3b>(point)[2];
+
+	return (int)(0.0771f * B + 0.7154f * G + 0.2125f * R);
+}
+
 float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];

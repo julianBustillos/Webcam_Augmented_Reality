@@ -18,6 +18,7 @@ struct Line {
 	cv::Vec2i p1;
 	cv::Vec2i p2;
 	float orientation;
+	bool isValid;
 };
 
 struct HypoLine {

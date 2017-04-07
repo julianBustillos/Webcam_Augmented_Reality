@@ -38,6 +38,7 @@ private:
 	void addMergedLines(const cv::Mat & frame, std::vector<int> & filter, std::vector<Line>& finalLineList, std::vector<Line>& initialLineList) const;
 	void extendLines(const cv::Mat & frame);
 	void getExtremity(const cv::Mat & frame, std::vector<int> & filter, cv::Vec2i & start, const cv::Vec2i & dir, float lineOrientation) const;
+	bool isValid(const cv::Mat & frame, std::vector<int> & filter, const cv::Vec2i & point, const cv::Vec2i & dir);
 
 	// DATA
 	double lastExecTime;

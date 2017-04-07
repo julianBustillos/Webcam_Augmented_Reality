@@ -15,4 +15,5 @@ public:
 	static float lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2);
 	static float pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p);
 	static float pointPointDistance(cv::Vec2i p1, cv::Vec2i p2);
+	static int grayScaleValue(const cv::Mat & frame, cv::Vec2i point);
 };

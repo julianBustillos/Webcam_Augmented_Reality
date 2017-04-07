@@ -44,6 +44,9 @@ void DebugInfo::nextMode()
 	case Mode::EXTENDED:
 		std::cout << "EXTENDED MODE" << std::endl;
 		break;
+	case Mode::EXTENDED_VALID:
+		std::cout << "EXTENDED_VALID MODE" << std::endl;
+		break;
 	case Mode::SUPERPOSITION:
 		std::cout << "SUPERPOSITION MODE" << std::endl;
 		break;
@@ -67,7 +70,7 @@ void DebugInfo::parametersWindow()
 {
 	// Create window
 	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
-	cv::resizeWindow(windowName, 290, 340);
+	cv::resizeWindow(windowName, 290, 380);
 
 	//Create trackbars
 	cv::createTrackbar("INTENSITY", windowName, nullptr, 200, callbackInt, PTR(INTENSITY_THRESHOLD));
@@ -78,6 +81,7 @@ void DebugInfo::parametersWindow()
 	cv::createTrackbar("DL_SEARCH", windowName, nullptr, 200, callbackInt, PTR(DOMINANT_LINE_SEARCH_ATTEMPTS));
 	cv::createTrackbar("DL_VOTES", windowName, nullptr, 30, callbackInt, PTR(MIN_DOMINANT_LINE_VOTES));
 	cv::createTrackbar("L_SEARCH", windowName, nullptr, 100, callbackInt, PTR(MAX_LINE_SEARCH_ITER));
+	cv::createTrackbar("BRIGHT", windowName, nullptr, 255, callbackInt, PTR(MIN_BRIGHTNESS));
 
 	// Set trackbars values
 	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
@@ -88,6 +92,7 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("DL_SEARCH", windowName, GET(DOMINANT_LINE_SEARCH_ATTEMPTS));
 	cv::setTrackbarPos("DL_VOTES", windowName, GET(MIN_DOMINANT_LINE_VOTES));
 	cv::setTrackbarPos("L_SEARCH", windowName, GET(MAX_LINE_SEARCH_ITER));
+	cv::setTrackbarPos("BRIGHT", windowName, GET(MIN_BRIGHTNESS));
 }
 
 bool DebugInfo::isPaused() const
@@ -126,6 +131,9 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 		break;
 	case Mode::EXTENDED:
 		printExtendedLines(frame, detector);
+		break;
+	case Mode::EXTENDED_VALID:
+		printValidExtendedLines(frame, detector);
 		break;
 	case Mode::SUPERPOSITION:
 		printRegions(frame, detector);
@@ -224,6 +232,21 @@ void DebugInfo::printExtendedLines(cv::Mat & frame, const CornerDetector & detec
 	cv::Scalar yellow(0, 255, 255);
 
 	printLineList(frame, lineList, yellow);
+}
+
+void DebugInfo::printValidExtendedLines(cv::Mat & frame, const CornerDetector & detector) const
+{
+	std::vector<Line> tempLineList = detector.getExtendedLineList();
+	std::vector<Line> lineList;
+	cv::Scalar purple(255, 51, 153);
+
+	for (int idx = 0; idx < tempLineList.size(); idx++) {
+		if (tempLineList[idx].isValid) {
+			lineList.push_back(tempLineList[idx]);
+		}
+	}
+
+	printLineList(frame, lineList, purple);
 }
 
 

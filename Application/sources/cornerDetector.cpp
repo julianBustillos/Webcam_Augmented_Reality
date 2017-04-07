@@ -520,6 +520,8 @@ void CornerDetector::extendLines(const cv::Mat & frame)
 		cv::Vec2i dir(currentLine.p2[0] - currentLine.p1[0], currentLine.p2[1] - currentLine.p1[1]);
 		getExtremity(frame, filter, currentLine.p2, dir, currentLine.orientation);
 		getExtremity(frame, filter, currentLine.p1, -dir, currentLine.orientation);
+		currentLine.isValid = isValid(frame, filter, currentLine.p2, dir);
+		currentLine.isValid |= isValid(frame, filter, currentLine.p1, -dir);
 		extendedLines.push_back(currentLine);
 	}
 }
@@ -583,6 +585,38 @@ void CornerDetector::getExtremity(const cv::Mat & frame, std::vector<int> & filt
 		start[0] = X;
 		start[1] = Y;
 	}
+}
+
+bool CornerDetector::isValid(const cv::Mat & frame, std::vector<int>& filter, const cv::Vec2i & point, const cv::Vec2i & dir)
+{
+	int X, Y, stepX, stepY;
+	float tDeltaX, tDeltaY, tMaxX, tMaxY;
+	int count = 0;
+
+	initRayTracing(point, dir, X, Y, tDeltaX, tDeltaY, tMaxX, tMaxY, stepX, stepY);
+
+	while (count < 3) {
+		if (tMaxX < tMaxY) {
+			tMaxX += tDeltaX;
+			X += stepX;
+		}
+		else {
+			tMaxY += tDeltaY;
+			Y += stepY;
+		}
+
+		if (X < 0 || frameSize[0] <= X || Y < 0 || frameSize[1] <= Y) {
+			return false;
+		}
+
+		count++;
+	}
+
+	if (MathTools::grayScaleValue(frame, cv::Vec2i(X, Y)) < GET(MIN_BRIGHTNESS)) {
+		return false;
+	}
+
+	return true;
 }
 
 double CornerDetector::getLastExecTime() const
