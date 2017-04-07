@@ -74,5 +74,8 @@
     <ClInclude Include="include\cornerDetector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

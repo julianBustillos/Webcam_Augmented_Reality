@@ -31,10 +31,13 @@ private:
 	void mergeLines(const cv::Mat & frame);
 	bool compatibleOrientation(Line & l1, Line & l2) const;
 	bool compatibleConnectionOrientation(Line & l1, Line & l2, Merge & merge) const;
+	void initRayTracing(const cv::Vec2i & start, const cv::Vec2i & dir, int & X, int & Y, float & tDeltaX, float & tDeltaY, float & tMaxX, float & tMaxY, int & stepX, int & stepY) const;
 	bool compatibleConnectionPixelsOrientation(const cv::Mat & frame, std::vector<int> & filter, Merge & merge) const;
+	float getPointOrientation(const cv::Mat & frame, const std::vector<int> & filter, const cv::Vec2i & point, int channel) const;
 	void deleteMergedLines(std::vector<Line> & lineList, int l1Idx, int l2Idx) const;
 	void addMergedLines(const cv::Mat & frame, std::vector<int> & filter, std::vector<Line>& finalLineList, std::vector<Line>& initialLineList) const;
 	void extendLines(const cv::Mat & frame);
+	void getExtremity(const cv::Mat & frame, std::vector<int> & filter, cv::Vec2i & start, const cv::Vec2i & dir, float lineOrientation) const;
 
 	// DATA
 	double lastExecTime;

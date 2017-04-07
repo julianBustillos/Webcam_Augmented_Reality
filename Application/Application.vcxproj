@@ -150,6 +150,7 @@
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\debugInfo.h" />
     <ClInclude Include="include\cornerDetector.h" />
+    <ClInclude Include="include\geometry.h" />
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />
     <ClInclude Include="include\constants.h" />

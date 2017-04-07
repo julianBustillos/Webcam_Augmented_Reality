@@ -9,12 +9,12 @@ extern DebugInfo info;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-#ifdef DEBUG
 	if (action != GLFW_PRESS) {
 		return;
 	}
 
 	switch (key) {
+#ifdef DEBUG
 	case GLFW_KEY_F:
 		info.nextFPS();
 		break;
@@ -27,8 +27,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_P:
 		info.nextPause();
 		break;
+#endif
+	case GLFW_KEY_ESCAPE:
+		glfwSetWindowShouldClose(window, true);
+		break;
 	default:
 		break;
 	}
-#endif
 }

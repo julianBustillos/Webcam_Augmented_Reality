@@ -111,10 +111,6 @@ void DebugInfo::updateFPS(const CornerDetector & detector)
 
 void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 {
-	if (fps == Active::ENABLED) {
-		printFPS(frame, detector);
-	}
-
 	switch (mode) {
 	case Mode::REGIONS:
 		printRegions(frame, detector);
@@ -140,6 +136,10 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 		break;
 	default:
 		break;
+	}
+
+	if (fps == Active::ENABLED) {
+		printFPS(frame, detector);
 	}
 }
 
@@ -220,7 +220,7 @@ void DebugInfo::printMergedLines(cv::Mat & frame, const CornerDetector & detecto
 
 void DebugInfo::printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const
 {
-	std::vector<Line> lineList;
+	std::vector<Line> lineList = detector.getExtendedLineList();
 	cv::Scalar yellow(0, 255, 255);
 
 	printLineList(frame, lineList, yellow);

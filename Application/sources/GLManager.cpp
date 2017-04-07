@@ -1,11 +1,8 @@
 #include "GLManager.h"
 #include <iostream>
-#include "debug.h"
 #include "constants.h"
-
-#ifdef DEBUG
 #include "keyboard.h"
-#endif
+
 
 GLManager::GLManager(cv::Mat & frame) :
 	window(nullptr), frameShader(nullptr)
@@ -90,11 +87,9 @@ void GLManager::initContext(int width, int height)
 
 	glfwMakeContextCurrent(window);
 
-#ifdef DEBUG
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
-#endif
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;

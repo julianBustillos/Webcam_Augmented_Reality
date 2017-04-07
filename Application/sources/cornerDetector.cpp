@@ -370,45 +370,50 @@ bool CornerDetector::compatibleConnectionOrientation(Line & l1, Line & l2, Merge
 	return (MathTools::orientationDiff(l1.orientation, lineOri) < GET(ORIENTATION_TOLERANCE)) && (MathTools::orientationDiff(l2.orientation, lineOri) < GET(ORIENTATION_TOLERANCE));
 }
 
-bool CornerDetector::compatibleConnectionPixelsOrientation(const cv::Mat & frame, std::vector<int> & filter, Merge & merge) const {
-	merge.orientation = MathTools::lineOrientation(merge.ext1, merge.ext2);
-	int X = merge.merge1[0];
-	int Y = merge.merge1[1];
-	float tDeltaX, tDeltaY;
-	float tMaxX, tMaxY;
-	int stepX, stepY;
-	int convolution[2];
-	float orientation;
+void CornerDetector::initRayTracing(const cv::Vec2i & start, const cv::Vec2i & dir, int & X, int & Y, float & tDeltaX, float & tDeltaY, float & tMaxX, float & tMaxY, int & stepX, int & stepY) const
+{
+	X = start[0];
+	Y = start[1];
 
-	if (merge.merge2[0] == X) {
+	if (dir[0] == 0) {
 		tDeltaX = 0;
 	}
 	else {
-		tDeltaX = 1.0f / abs(merge.merge2[0] - X);
+		tDeltaX = 1.0f / abs(dir[0]);
 	}
 	tMaxX = tDeltaX / 2.0f;
 
-	if (merge.merge2[1] == Y) {
+	if (dir[1] == 0) {
 		tDeltaY = 0;
 	}
 	else {
-		tDeltaY = 1.0f / abs(merge.merge2[1] - Y);
+		tDeltaY = 1.0f / abs(dir[1]);
 	}
 	tMaxY = tDeltaY / 2.0f;
 
-	if (merge.merge2[0] > X) {
+	if (dir[0] > 0) {
 		stepX = 1;
 	}
 	else {
 		stepX = -1;
 	}
-	if (merge.merge2[1] > Y) {
+	if (dir[1] > 0) {
 		stepY = 1;
 	}
 	else {
 		stepY = -1;
 	}
+}
 
+bool CornerDetector::compatibleConnectionPixelsOrientation(const cv::Mat & frame, std::vector<int> & filter, Merge & merge) const {
+	merge.orientation = MathTools::lineOrientation(merge.ext1, merge.ext2);
+	float orientation;
+	int X, Y, stepX, stepY;
+	float tDeltaX, tDeltaY, tMaxX, tMaxY;
+	cv::Vec2i dir(merge.merge2[0] - merge.merge1[0], merge.merge2[1] - merge.merge1[1]);
+
+	initRayTracing(merge.merge1, dir, X, Y, tDeltaX, tDeltaY, tMaxX, tMaxY, stepX, stepY);
+	
 	while (true) {
 		if (tMaxX < tMaxY) {
 			tMaxX += tDeltaX;
@@ -423,15 +428,21 @@ bool CornerDetector::compatibleConnectionPixelsOrientation(const cv::Mat & frame
 			break;
 		}
 
-		convolution[0] = MathTools::convolution(frame, frameSize, filter, cv::Vec2i(X, Y), cv::Vec2i(1, 0), 0);
-		convolution[1] = MathTools::convolution(frame, frameSize, filter, cv::Vec2i(X, Y), cv::Vec2i(0, 1), 0);
-		orientation = MathTools::edgelOrientation(convolution[0], convolution[1], EdgelType::horizontal);
+		orientation = getPointOrientation(frame, filter, cv::Vec2i(X, Y), 0);
 		if (MathTools::orientationDiff(orientation, merge.orientation) > GET(ORIENTATION_TOLERANCE)) {
 			return false;
 		}
 	}
 
 	return true;
+}
+
+float CornerDetector::getPointOrientation(const cv::Mat & frame, const std::vector<int>& filter, const cv::Vec2i & point, int channel) const
+{
+	int convolution[2];
+	convolution[0] = MathTools::convolution(frame, frameSize, filter, point, cv::Vec2i(1, 0), channel);
+	convolution[1] = MathTools::convolution(frame, frameSize, filter, point, cv::Vec2i(0, 1), channel);
+	return MathTools::edgelOrientation(convolution[0], convolution[1], EdgelType::horizontal);
 }
 
 void CornerDetector::deleteMergedLines(std::vector<Line>& lineList, int l1Idx, int l2Idx) const
@@ -501,7 +512,77 @@ void CornerDetector::addMergedLines(const cv::Mat & frame, std::vector<int> & fi
 void CornerDetector::extendLines(const cv::Mat & frame)
 {
 	extendedLines.clear();
-	//TODO
+	Line currentLine;
+	std::vector<int> filter = GET(FILTER);
+
+	for (int idx = 0; idx < mergedLines.size(); idx++) {
+		currentLine = mergedLines[idx];
+		cv::Vec2i dir(currentLine.p2[0] - currentLine.p1[0], currentLine.p2[1] - currentLine.p1[1]);
+		getExtremity(frame, filter, currentLine.p2, dir, currentLine.orientation);
+		getExtremity(frame, filter, currentLine.p1, -dir, currentLine.orientation);
+		extendedLines.push_back(currentLine);
+	}
+}
+
+void CornerDetector::getExtremity(const cv::Mat & frame, std::vector<int> & filter, cv::Vec2i & start, const cv::Vec2i & dir, float lineOrientation) const
+{
+	float orientation;
+	int X, Y, stepX, stepY, tempX, tempY;
+	float tDeltaX, tDeltaY, tMaxX, tMaxY;
+
+	initRayTracing(start, dir, X, Y, tDeltaX, tDeltaY, tMaxX, tMaxY, stepX, stepY);
+
+	while (true) {
+		if (tMaxX < tMaxY) {
+			tMaxX += tDeltaX;
+			X += stepX;
+		}
+		else {
+			tMaxY += tDeltaY;
+			Y += stepY;
+		}
+
+		if (X < 0 || frameSize[0] <= X || Y < 0 || frameSize[1] <= Y) {
+			break;
+		}
+
+		orientation = getPointOrientation(frame, filter, cv::Vec2i(X, Y), 0);
+		if (MathTools::orientationDiff(orientation, lineOrientation) > GET(ORIENTATION_TOLERANCE)) {
+			// Distorsion/deviation verification (dir = (u,v))
+			// Orthogonal first direction (v, -u)
+			if (dir[1] > -dir[0]) {
+				tempX = X + stepY;
+			}
+			else {
+				tempY = Y - stepX;
+			}
+
+			orientation = getPointOrientation(frame, filter, cv::Vec2i(X, Y), 0);
+			if (MathTools::orientationDiff(orientation, lineOrientation) > GET(ORIENTATION_TOLERANCE)) {
+				// Orthogonal second direction (-v, u)
+				if (-dir[1] > dir[0]) {
+					tempX = X - stepY;
+				}
+				else {
+					tempY = Y + stepX;
+				}
+
+				orientation = getPointOrientation(frame, filter, cv::Vec2i(X, Y), 0);
+				if (MathTools::orientationDiff(orientation, lineOrientation) > GET(ORIENTATION_TOLERANCE)) {
+					break;
+				}
+				X = tempX;
+				Y = tempY;
+			}
+			else {
+				X = tempX;
+				Y = tempY;
+			}
+		}
+
+		start[0] = X;
+		start[1] = Y;
+	}
 }
 
 double CornerDetector::getLastExecTime() const
