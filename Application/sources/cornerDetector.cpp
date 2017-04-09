@@ -371,9 +371,15 @@ bool CornerDetector::compatibleConnectionOrientation(Line & l1, Line & l2, Merge
 		merge.ext2 = l1.p2;
 	}
 
+	// Test first orientation
 	float lineOri = MathTools::lineOrientation(merge.merge1, merge.merge2);
+	bool result = (MathTools::orientationDiff(l1.orientation, lineOri) < GET(ORIENTATION_TOLERANCE)) && (MathTools::orientationDiff(l2.orientation, lineOri) < GET(ORIENTATION_TOLERANCE));
 
-	return (MathTools::orientationDiff(l1.orientation, lineOri) < GET(ORIENTATION_TOLERANCE)) && (MathTools::orientationDiff(l2.orientation, lineOri) < GET(ORIENTATION_TOLERANCE));
+	// Test second orientation
+	lineOri = MathTools::lineOrientation(merge.merge2, merge.merge1);
+	result |= (MathTools::orientationDiff(l1.orientation, lineOri) < GET(ORIENTATION_TOLERANCE)) && (MathTools::orientationDiff(l2.orientation, lineOri) < GET(ORIENTATION_TOLERANCE));
+	
+	return result;
 }
 
 void CornerDetector::initRayTracing(const cv::Vec2i & start, const cv::Vec2i & dir, int & X, int & Y, float & tDeltaX, float & tDeltaY, float & tMaxX, float & tMaxY, int & stepX, int & stepY) const
@@ -660,7 +666,8 @@ void CornerDetector::detectCorners()
 	for (int idx = 0; idx < quadList.size(); idx++) {
 		corners.clear();
 		getCorners(corners, quadList[idx]);
-		cornerGroups.push_back(corners);
+		if (corners.size() ==4)
+			cornerGroups.push_back(corners);
 	}
 
 }
@@ -717,6 +724,7 @@ void CornerDetector::removeLines(const std::deque<int>& indexList, std::vector<i
 	}
 
 	std::deque<int> sortedIndexList = indexList;
+	sortedIndexList.resize(1);
 	std::sort(sortedIndexList.begin(), sortedIndexList.end());
 
 	int shift = 1;
