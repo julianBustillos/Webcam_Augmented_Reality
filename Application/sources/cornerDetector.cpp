@@ -42,6 +42,7 @@ void CornerDetector::execute(const cv::Mat & frame)
 	RANSACGrouper();
 	mergeLines(frame);
 	extendLines(frame);
+	detectCorners();
 
 #ifdef DEBUG
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -67,6 +68,11 @@ const std::vector<Line> CornerDetector::getMergedLineList() const
 const std::vector<Line> CornerDetector::getExtendedLineList() const
 {
 	return extendedLines;
+}
+
+const std::vector<std::vector<cv::Vec2i>> CornerDetector::getCornerGroupsList() const
+{
+	return cornerGroups;
 }
 
 const std::vector<Edgel> CornerDetector::getEdgelList() const
@@ -524,6 +530,7 @@ void CornerDetector::extendLines(const cv::Mat & frame)
 		currentLine.isValid |= isValid(frame, filter, currentLine.p1, -dir);
 		extendedLines.push_back(currentLine);
 	}
+
 }
 
 void CornerDetector::getExtremity(const cv::Mat & frame, std::vector<int> & filter, cv::Vec2i & start, const cv::Vec2i & dir, float lineOrientation) const
@@ -617,6 +624,168 @@ bool CornerDetector::isValid(const cv::Mat & frame, std::vector<int>& filter, co
 	}
 
 	return true;
+}
+
+void CornerDetector::detectCorners()
+{
+	std::vector<int> availableLines;
+	std::vector<std::deque<int>> quadList;
+	std::deque<int> indexList;
+	std::deque<int> linesGroup;
+	std::vector<cv::Vec2i> corners;
+	availableLines.clear();
+	quadList.clear();
+	cornerGroups.clear();
+
+	// Get all valid lines
+	for (int idx = 0; idx < extendedLines.size(); idx++) {
+		if (extendedLines[idx].isValid) {
+			availableLines.push_back(idx);
+		}
+	}
+
+	// Search potential quadrangles
+	while (!availableLines.empty()) {
+		indexList.clear();
+		linesGroup.clear();
+		getQuadrangle(indexList, availableLines);
+		getLineGroup(linesGroup, indexList, availableLines);
+		removeLines(indexList, availableLines);
+		if (linesGroup.size() > 2) {
+			quadList.push_back(linesGroup);
+		}
+	}
+
+	// Generate groups of four linked corners
+	for (int idx = 0; idx < quadList.size(); idx++) {
+		corners.clear();
+		getCorners(corners, quadList[idx]);
+		cornerGroups.push_back(corners);
+	}
+
+}
+
+void CornerDetector::getQuadrangle(std::deque<int>& indexList, const std::vector<int>& availableLines) const
+{
+	if (availableLines.empty()) {
+		return;
+	}
+
+	indexList.push_back(0);
+	int currentLine = 0;
+	bool finded = true;
+	
+	// Find connected line in the first direction
+	while (finded) {
+		if (indexList.size() >= 4) {
+			break;
+		}
+		finded = false;
+		for (int idx = 1; idx < availableLines.size(); idx++) {
+			if (isNextLine(extendedLines[availableLines[currentLine]].p2, extendedLines[availableLines[idx]].p1, extendedLines[availableLines[currentLine]].orientation, extendedLines[availableLines[idx]].orientation)) {
+				indexList.push_back(idx);
+				currentLine = idx;
+				finded = true;
+				break;
+			}
+		}
+	}
+
+	currentLine = 0;
+	finded = true;
+	// Find connected line in the second direction
+	while (finded) {
+		if (indexList.size() >= 4) {
+			break;
+		}
+		finded = false;
+		for (int idx = 1; idx < availableLines.size(); idx++) {
+			if (isNextLine(extendedLines[availableLines[idx]].p2, extendedLines[availableLines[currentLine]].p1, extendedLines[availableLines[idx]].orientation, extendedLines[availableLines[currentLine]].orientation)) {
+				indexList.push_front(idx);
+				currentLine = idx;
+				finded = true;
+				break;
+			}
+		}
+	}
+}
+
+void CornerDetector::removeLines(const std::deque<int>& indexList, std::vector<int>& availableLines) const
+{
+	if (indexList.empty()) {
+		return;
+	}
+
+	std::deque<int> sortedIndexList = indexList;
+	std::sort(sortedIndexList.begin(), sortedIndexList.end());
+
+	int shift = 1;
+	int nextIndex = 1;
+	for (int idx = sortedIndexList[0]; idx < availableLines.size(); idx++) {
+		while (sortedIndexList.size() > nextIndex && idx + 1 == sortedIndexList[nextIndex]) {
+			shift++;
+			nextIndex++;
+		}
+		if (idx + shift >= availableLines.size()) {
+			break;
+		}
+		availableLines[idx] = availableLines[idx + shift];
+	}
+
+	while (!sortedIndexList.empty()) {
+		sortedIndexList.pop_back();
+		availableLines.pop_back();
+	}
+}
+
+void CornerDetector::getCorners(std::vector<cv::Vec2i>& corners, const std::deque<int> quadLines) const
+{
+	if (quadLines.size() == 4) {
+		if (MathTools::pointPointDistance(extendedLines[quadLines[0]].p1, extendedLines[quadLines[3]].p2) > GET(MAX_DIST_CORNERS)) {
+			corners.push_back(MathTools::linesIntersection(extendedLines[quadLines[3]].p1, extendedLines[quadLines[3]].p2, extendedLines[quadLines[0]].p1, extendedLines[quadLines[0]].p2));
+		}
+		else {
+			corners.push_back(MathTools::averagePoint(extendedLines[quadLines[3]].p2, extendedLines[quadLines[0]].p1));
+		}
+		corners.push_back(MathTools::averagePoint(extendedLines[quadLines[0]].p2, extendedLines[quadLines[1]].p1));
+		corners.push_back(MathTools::averagePoint(extendedLines[quadLines[1]].p2, extendedLines[quadLines[2]].p1));
+		corners.push_back(MathTools::averagePoint(extendedLines[quadLines[2]].p2, extendedLines[quadLines[3]].p1));
+	}
+
+	if (quadLines.size() == 3) {
+		corners.push_back(extendedLines[quadLines[0]].p1);
+		corners.push_back(MathTools::averagePoint(extendedLines[quadLines[0]].p2, extendedLines[quadLines[1]].p1));
+		corners.push_back(MathTools::averagePoint(extendedLines[quadLines[1]].p2, extendedLines[quadLines[2]].p1));
+		corners.push_back(extendedLines[quadLines[2]].p2);
+	}
+}
+
+bool CornerDetector::isNextLine(const cv::Vec2i & p1, const cv::Vec2i & p2, float ori1, float ori2) const
+{
+	// Check parallelism
+	if (MathTools::orientationDiff(ori1, ori2) <= GET(PARALLELISM_TOLERANCE)) {
+		return false;
+	}
+
+	// Check extremities distance
+	if (MathTools::pointPointDistance(p1, p2) > GET(MAX_DIST_CORNERS)) {
+		return false;
+	}
+
+	// Check orientation
+	float target = MathTools::mod2Pi(ori1 - M_PI / 2);
+	if (MathTools::orientationDiff(target, ori2) > M_PI / 2) {
+		return false;
+	}
+
+	return true;
+}
+
+void CornerDetector::getLineGroup(std::deque<int>& linesGroup, const std::deque<int> & indexList, const std::vector<int>& availableLines) const
+{
+	for (int idx = 0; idx < indexList.size(); idx++) {
+		linesGroup.push_back(availableLines[indexList[idx]]);
+	}
 }
 
 double CornerDetector::getLastExecTime() const

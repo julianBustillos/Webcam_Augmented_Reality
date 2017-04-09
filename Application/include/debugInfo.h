@@ -18,8 +18,8 @@ enum class Mode {
 	LINES,
 	MERGED,
 	EXTENDED,
-	EXTENDED_VALID,
 	SUPERPOSITION,
+	CORNERS,
 	SIZE
 };
 
@@ -41,12 +41,12 @@ private:
 	void printFPS(cv::Mat & frame, const CornerDetector & detector) const;
 	void printRegions(cv::Mat & frame, const CornerDetector & detector) const;
 	void printEdgels(cv::Mat & frame, const CornerDetector & detector) const;
-	void printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::Scalar color) const;
+	void printPoint(cv::Mat & frame, const cv::Vec2i position, int size, const cv::Scalar color) const;
 	void printLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printLineList(cv::Mat & frame, const std::vector<Line> & lineList, const cv::Scalar color) const;
 	void printMergedLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const;
-	void printValidExtendedLines(cv::Mat & frame, const CornerDetector & detector) const;
+	void printCorners(cv::Mat & frame, const CornerDetector & detector) const;
 
 	// DATA
 	Active fps;

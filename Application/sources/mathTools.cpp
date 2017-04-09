@@ -63,6 +63,39 @@ int MathTools::grayScaleValue(const cv::Mat & frame, cv::Vec2i point)
 	return (int)(0.0771f * B + 0.7154f * G + 0.2125f * R);
 }
 
+cv::Vec2i MathTools::averagePoint(cv::Vec2i p1, cv::Vec2i p2)
+{
+	cv::Vec2f average = (p1 + p2) / 2.0f;
+	return cv::Vec2i((int)average[0], (int)average[1]);
+}
+
+cv::Vec2i MathTools::linesIntersection(cv::Vec2i l1p1, cv::Vec2i l1p2, cv::Vec2i l2p1, cv::Vec2i l2p2)
+{
+	float x;
+	float y;
+
+	x = (float)(l1p1[0] * l1p2[1] - l1p1[1] * l1p2[0]) * (l2p1[0] - l2p2[0]) - (float)(l2p1[0] * l2p2[1] - l2p1[1] * l2p2[0]) * (l1p1[0] - l1p2[0]);
+	x /= (float)(l1p1[0] - l1p2[0]) * (l2p1[1] - l2p2[1]) - (float)(l1p1[1] - l1p2[1]) * (l2p1[0] - l2p2[0]);
+
+	y = (float)(l1p1[0] * l1p2[1] - l1p1[1] * l1p2[0]) * (l2p1[1] - l2p2[1]) - (float)(l2p1[0] * l2p2[1] - l2p1[1] * l2p2[0]) * (l1p1[1] - l1p2[1]);
+	y /= (float)(l1p1[0] - l1p2[0]) * (l2p1[1] - l2p2[1]) - (float)(l1p1[1] - l1p2[1]) * (l2p1[0] - l2p2[0]);
+
+	return cv::Vec2i((int)x, (int)y);
+}
+
+float MathTools::mod2Pi(float val)
+{
+	if (val > M_PI) {
+		return val - 2 * M_PI;
+	}
+
+	if (val < - M_PI) {
+		return val + 2 * M_PI;
+	}
+
+	return val;
+}
+
 float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];

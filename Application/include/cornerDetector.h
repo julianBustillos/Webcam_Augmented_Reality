@@ -3,6 +3,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include "geometry.h"
+#include <deque>
 
 
 class CornerDetector {
@@ -16,6 +17,7 @@ public:
 	const std::vector<Line> getLineList() const;
 	const std::vector<Line> getMergedLineList() const;
 	const std::vector<Line> getExtendedLineList() const;
+	const std::vector<std::vector<cv::Vec2i>> getCornerGroupsList() const;
 	double getLastExecTime() const;
 
 private:
@@ -39,6 +41,12 @@ private:
 	void extendLines(const cv::Mat & frame);
 	void getExtremity(const cv::Mat & frame, std::vector<int> & filter, cv::Vec2i & start, const cv::Vec2i & dir, float lineOrientation) const;
 	bool isValid(const cv::Mat & frame, std::vector<int> & filter, const cv::Vec2i & point, const cv::Vec2i & dir);
+	void detectCorners();
+	void getQuadrangle(std::deque<int> & indexList, const std::vector<int> & availableLines) const;
+	void removeLines(const std::deque<int> & indexList, std::vector<int> & availableLines) const;
+	void getCorners(std::vector<cv::Vec2i> & corners, const std::deque<int> quadLines) const;
+	bool isNextLine(const cv::Vec2i & p1, const cv::Vec2i & p2, float ori1, float ori2) const;
+	void getLineGroup(std::deque<int> & lineGroup, const std::deque<int> & indexList, const std::vector<int> & availableLines) const;
 
 	// DATA
 	double lastExecTime;
@@ -48,4 +56,5 @@ private:
 	std::vector<std::vector<Region>> regionGrid;
 	std::vector<Line> mergedLines;
 	std::vector<Line> extendedLines;
+	std::vector<std::vector<cv::Vec2i>> cornerGroups;
 };

@@ -44,8 +44,8 @@ void DebugInfo::nextMode()
 	case Mode::EXTENDED:
 		std::cout << "EXTENDED MODE" << std::endl;
 		break;
-	case Mode::EXTENDED_VALID:
-		std::cout << "EXTENDED_VALID MODE" << std::endl;
+	case Mode::CORNERS:
+		std::cout << "CORNERS MODE" << std::endl;
 		break;
 	case Mode::SUPERPOSITION:
 		std::cout << "SUPERPOSITION MODE" << std::endl;
@@ -70,18 +70,20 @@ void DebugInfo::parametersWindow()
 {
 	// Create window
 	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
-	cv::resizeWindow(windowName, 290, 380);
+	cv::resizeWindow(windowName, 290, 470);
 
 	//Create trackbars
 	cv::createTrackbar("INTENSITY", windowName, nullptr, 200, callbackInt, PTR(INTENSITY_THRESHOLD));
 	cv::createTrackbar("CHANNEL", windowName, nullptr, 256, callbackInt, PTR(CHANNEL_GAP_THRESHOLD));
 	cv::createTrackbar("ORIENT", windowName, nullptr, 360, callbackFloatDegree, PTR(ORIENTATION_TOLERANCE));
 	cv::createTrackbar("HLINE", windowName, nullptr, 200, callbackInt, PTR(HYPOLINE_ATTEMPTS));
-	cv::createTrackbar("PL_DIST", windowName, nullptr, 300, callbackInt, PTR(POINT_LINE_DIST_TOLERANCE));
+	cv::createTrackbar("PL_DIST", windowName, nullptr, 300, callbackFloatDist, PTR(POINT_LINE_DIST_TOLERANCE));
 	cv::createTrackbar("DL_SEARCH", windowName, nullptr, 200, callbackInt, PTR(DOMINANT_LINE_SEARCH_ATTEMPTS));
 	cv::createTrackbar("DL_VOTES", windowName, nullptr, 30, callbackInt, PTR(MIN_DOMINANT_LINE_VOTES));
 	cv::createTrackbar("L_SEARCH", windowName, nullptr, 100, callbackInt, PTR(MAX_LINE_SEARCH_ITER));
 	cv::createTrackbar("BRIGHT", windowName, nullptr, 255, callbackInt, PTR(MIN_BRIGHTNESS));
+	cv::createTrackbar("CORNERS", windowName, nullptr, 1000, callbackFloatDist, PTR(MAX_DIST_CORNERS));
+	cv::createTrackbar("PARALLEL", windowName, nullptr, 360, callbackFloatDegree, PTR(PARALLELISM_TOLERANCE));
 
 	// Set trackbars values
 	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
@@ -93,6 +95,8 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("DL_VOTES", windowName, GET(MIN_DOMINANT_LINE_VOTES));
 	cv::setTrackbarPos("L_SEARCH", windowName, GET(MAX_LINE_SEARCH_ITER));
 	cv::setTrackbarPos("BRIGHT", windowName, GET(MIN_BRIGHTNESS));
+	cv::setTrackbarPos("CORNERS", windowName, (int)(GET(MAX_DIST_CORNERS) * 100));
+	cv::setTrackbarPos("PARALLEL", windowName, (int)(GET(PARALLELISM_TOLERANCE) * 180 / M_PI));
 }
 
 bool DebugInfo::isPaused() const
@@ -132,8 +136,8 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 	case Mode::EXTENDED:
 		printExtendedLines(frame, detector);
 		break;
-	case Mode::EXTENDED_VALID:
-		printValidExtendedLines(frame, detector);
+	case Mode::CORNERS:
+		printCorners(frame, detector);
 		break;
 	case Mode::SUPERPOSITION:
 		printRegions(frame, detector);
@@ -184,18 +188,19 @@ void DebugInfo::printEdgels(cv::Mat & frame, const CornerDetector & detector) co
 
 	for (int k = 0; k < edgelList.size(); k++) {
 		if (edgelList[k].type == EdgelType::horizontal) {
-			printEdgel(frame, edgelList[k].position, green);
+			printPoint(frame, edgelList[k].position, 3, green);
 		}
 		else {
-			printEdgel(frame, edgelList[k].position, blue);
+			printPoint(frame, edgelList[k].position, 3, blue);
 		}
 	}
 }
 
-void DebugInfo::printEdgel(cv::Mat & frame, const cv::Vec2i position, const cv::Scalar color) const
+void DebugInfo::printPoint(cv::Mat & frame, const cv::Vec2i position, int size, const cv::Scalar color) const
 {
 	cv::Vec2i reversePos(position[1], position[0]);
-	cv::Point rect[4] = { reversePos + cv::Vec2i(-1, -1), reversePos + cv::Vec2i(-1, 1), reversePos + cv::Vec2i(1, 1), reversePos + cv::Vec2i(1, -1) };
+	int offset = (size - 1) / 2;
+	cv::Point rect[4] = { reversePos + cv::Vec2i(-offset, -offset), reversePos + cv::Vec2i(-offset, offset), reversePos + cv::Vec2i(offset, offset), reversePos + cv::Vec2i(offset, -offset) };
 	const cv::Point *cRectPtr[4] = { rect };
 	int nbPts = 4;
 	cv::fillPoly(frame, cRectPtr, &nbPts, 1, color);
@@ -229,25 +234,57 @@ void DebugInfo::printMergedLines(cv::Mat & frame, const CornerDetector & detecto
 void DebugInfo::printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const
 {
 	std::vector<Line> lineList = detector.getExtendedLineList();
+	std::vector<Line> validLineList;
+	std::vector<Line> invalidLineList;
 	cv::Scalar yellow(0, 255, 255);
+	cv::Scalar white(255, 255, 255);
+	validLineList.clear();
+	invalidLineList.clear();
 
-	printLineList(frame, lineList, yellow);
+	for (int idx = 0; idx < lineList.size(); idx++) {
+		if (lineList[idx].isValid) {
+			validLineList.push_back(lineList[idx]);
+		}
+		else {
+			invalidLineList.push_back(lineList[idx]);
+		}
+	}
+
+	printLineList(frame, invalidLineList, white);
+	printLineList(frame, validLineList, yellow);
 }
 
-void DebugInfo::printValidExtendedLines(cv::Mat & frame, const CornerDetector & detector) const
+void DebugInfo::printCorners(cv::Mat & frame, const CornerDetector & detector) const
 {
-	std::vector<Line> tempLineList = detector.getExtendedLineList();
+	std::vector<std::vector<cv::Vec2i>> cornerGroupList = detector.getCornerGroupsList();
+	Line currentLine;
 	std::vector<Line> lineList;
+	lineList.clear();
 	cv::Scalar purple(255, 51, 153);
+	cv::Scalar purpleBright(255, 102, 178);
+	cv::Vec2i prec;
 
-	for (int idx = 0; idx < tempLineList.size(); idx++) {
-		if (tempLineList[idx].isValid) {
-			lineList.push_back(tempLineList[idx]);
+	//Print link
+	for (int groupIdx = 0; groupIdx < cornerGroupList.size(); groupIdx++) {
+		prec = cornerGroupList[groupIdx][0];
+		for (int cornerIdx = 1; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
+			currentLine.p1 = prec;
+			currentLine.p2 = cornerGroupList[groupIdx][cornerIdx];
+			prec = cornerGroupList[groupIdx][cornerIdx];
+			lineList.push_back(currentLine);
 		}
 	}
 
 	printLineList(frame, lineList, purple);
+
+	//Print corners
+	for (int groupIdx = 0; groupIdx < cornerGroupList.size(); groupIdx++) {
+		for (int cornerIdx = 0; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
+			printPoint(frame, cornerGroupList[groupIdx][cornerIdx], 7, purpleBright);
+		}
+	}
 }
+
 
 
 // Callback functions for parameter window
