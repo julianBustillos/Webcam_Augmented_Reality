@@ -266,8 +266,8 @@ void DebugInfo::printCorners(cv::Mat & frame, const CornerDetector & detector) c
 
 	//Print link
 	for (int groupIdx = 0; groupIdx < cornerGroupList.size(); groupIdx++) {
-		prec = cornerGroupList[groupIdx][0];
-		for (int cornerIdx = 1; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
+		prec = cornerGroupList[groupIdx][cornerGroupList[groupIdx].size() - 1];
+		for (int cornerIdx = 0; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
 			currentLine.p1 = prec;
 			currentLine.p2 = cornerGroupList[groupIdx][cornerIdx];
 			prec = cornerGroupList[groupIdx][cornerIdx];
