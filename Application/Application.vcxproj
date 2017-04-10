@@ -139,6 +139,7 @@
     <ClCompile Include="sources\GLManager.cpp" />
     <ClCompile Include="sources\keyboard.cpp" />
     <ClCompile Include="sources\main.cpp" />
+    <ClCompile Include="sources\markerRecognizer.cpp" />
     <ClCompile Include="sources\mathTools.cpp" />
     <ClCompile Include="sources\shader.cpp" />
     <ClCompile Include="sources\webcam.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />
     <ClInclude Include="include\constants.h" />
+    <ClInclude Include="include\markerRecognizer.h" />
     <ClInclude Include="include\mathTools.h" />
     <ClInclude Include="include\shader.h" />
     <ClInclude Include="include\webcam.h" />

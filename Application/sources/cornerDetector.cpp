@@ -3,10 +3,9 @@
 #include "constants.h"
 #include <iostream>
 #include "mathTools.h"
-#include <chrono>
 
 #ifdef DEBUG
-#include <time.h>
+#include <chrono>
 #endif
 
 

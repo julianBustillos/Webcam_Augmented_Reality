@@ -48,3 +48,11 @@ struct Region {
 	std::vector<Edgel> edgels;
 	std::vector<Line> lines;
 };
+
+enum class Direction {
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT,
+	UNKNOWN
+};
