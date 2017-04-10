@@ -44,11 +44,14 @@ void DebugInfo::nextMode()
 	case Mode::EXTENDED:
 		std::cout << "EXTENDED MODE" << std::endl;
 		break;
+	case Mode::SUPERPOSITION:
+		std::cout << "SUPERPOSITION MODE" << std::endl;
+		break;
 	case Mode::CORNERS:
 		std::cout << "CORNERS MODE" << std::endl;
 		break;
-	case Mode::SUPERPOSITION:
-		std::cout << "SUPERPOSITION MODE" << std::endl;
+	case Mode::MARKER:
+		std::cout << "MARKER MODE" << std::endl;
 		break;
 	default:
 		break;
@@ -60,10 +63,10 @@ void DebugInfo::nextPause()
 	pause = Active(((int)pause + 1) % (int)Active::SIZE);
 }
 
-void DebugInfo::printOnFrame(cv::Mat & frame, const CornerDetector & detector)
+void DebugInfo::printOnFrame(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer)
 {
 	updateFPS(detector);
-	print(frame, detector);
+	print(frame, detector, recognizer);
 }
 
 void DebugInfo::parametersWindow()
@@ -118,7 +121,7 @@ void DebugInfo::updateFPS(const CornerDetector & detector)
 	}
 }
 
-void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
+void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer) const
 {
 	switch (mode) {
 	case Mode::REGIONS:
@@ -136,15 +139,18 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector) const
 	case Mode::EXTENDED:
 		printExtendedLines(frame, detector);
 		break;
-	case Mode::CORNERS:
-		printCorners(frame, detector);
-		break;
 	case Mode::SUPERPOSITION:
 		printRegions(frame, detector);
 		printEdgels(frame, detector);
 		printExtendedLines(frame, detector);
 		printMergedLines(frame, detector);
 		printLines(frame, detector);
+		break;
+	case Mode::CORNERS:
+		printCorners(frame, detector);
+		break;
+	case Mode::MARKER:
+		printMarker(frame, recognizer);
 		break;
 	default:
 		break;
@@ -283,6 +289,40 @@ void DebugInfo::printCorners(cv::Mat & frame, const CornerDetector & detector) c
 			printPoint(frame, cornerGroupList[groupIdx][cornerIdx], 7, purpleBright);
 		}
 	}
+}
+
+void DebugInfo::printTriangle(cv::Mat & frame, const std::vector<cv::Vec2i> & pointList, cv::Scalar color) const
+{
+	cv::Point tri[3] = { cv::Vec2i(pointList[0][1], pointList[0][0]), cv::Vec2i(pointList[1][1], pointList[1][0]), cv::Vec2i(pointList[2][1], pointList[2][0]) };
+	const cv::Point *cRectPtr[3] = { tri };
+	int nbPts = 3;
+	cv::fillPoly(frame, cRectPtr, &nbPts, 1, color);
+}
+
+void DebugInfo::printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer) const
+{
+	std::vector<cv::Vec2i> corners = recognizer.getOrderedCorners();
+	Line currentLine;
+	cv::Vec2i prec;
+	std::vector<Line> lineList;
+	lineList.clear();
+	cv::Scalar green(0, 255, 0);
+	cv::Scalar greenBright(102, 255, 102);
+
+	// Print marker border
+	prec = corners[corners.size() - 1];
+	for (int cornerIdx = 0; cornerIdx < corners.size(); cornerIdx++) {
+		currentLine.p1 = prec;
+		currentLine.p2 = corners[cornerIdx];
+		prec = corners[cornerIdx];
+		lineList.push_back(currentLine);
+	}
+
+	printLineList(frame, lineList, green);
+
+	// Print marker direction
+	std::vector<cv::Vec2i> triangle = recognizer.getDirectionTriangle();
+	printTriangle(frame, triangle, greenBright);
 }
 
 

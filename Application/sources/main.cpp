@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 		detector.execute(webcam.getFrame());
 		recognizer.searchMarker(webcam.getFrame(), detector.getCornerGroupsList());
 #ifdef DEBUG
-		info.printOnFrame(webcam.getFrame(), detector);
+		info.printOnFrame(webcam.getFrame(), detector, recognizer);
 #endif
 		glManager.drawFrame(webcam.getFrame());
 		glManager.swapBuffers();

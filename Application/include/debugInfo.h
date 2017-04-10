@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "cornerDetector.h"
 #include <chrono>
+#include "markerRecognizer.h"
 
 
 enum class Active {
@@ -20,6 +21,7 @@ enum class Mode {
 	EXTENDED,
 	SUPERPOSITION,
 	CORNERS,
+	MARKER,
 	SIZE
 };
 
@@ -31,13 +33,13 @@ public:
 	void nextFPS();
 	void nextMode();
 	void nextPause();
-	void printOnFrame(cv::Mat & frame, const CornerDetector & detector);
+	void printOnFrame(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer);
 	void parametersWindow();
 	bool isPaused() const;
 
 private:
 	void updateFPS(const CornerDetector & detector);
-	void print(cv::Mat & frame, const CornerDetector & detector) const;
+	void print(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer) const;
 	void printFPS(cv::Mat & frame, const CornerDetector & detector) const;
 	void printRegions(cv::Mat & frame, const CornerDetector & detector) const;
 	void printEdgels(cv::Mat & frame, const CornerDetector & detector) const;
@@ -47,6 +49,8 @@ private:
 	void printMergedLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printExtendedLines(cv::Mat & frame, const CornerDetector & detector) const;
 	void printCorners(cv::Mat & frame, const CornerDetector & detector) const;
+	void printTriangle(cv::Mat & frame, const std::vector<cv::Vec2i> & pointList, cv::Scalar color) const;
+	void printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer) const;
 
 	// DATA
 	Active fps;

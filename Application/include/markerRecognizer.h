@@ -1,6 +1,9 @@
+#pragma once
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include "geometry.h"
+#include "debug.h"
 
 
 class MarkerRecognizer {
@@ -14,12 +17,13 @@ public:
 
 private:
 	cv::Mat getMarkerMatrix() const;
-	int getRotateIdentifier(const cv::Mat & marker, int initI, int incrI, int initJ, int incrJ, bool reverse);
+	int getRotateIdentifier(const cv::Mat & marker, int initI, int incrI, int initJ, int incrJ, bool reverse) const;
 	void computeDirectionIndices();
 	void setA(const std::vector<cv::Vec2i> & corners);
 	void solveH();
+	cv::Vec2i getFrameCoordinates(float worldX, float worldY) const;
 	Direction getDirection(const cv::Mat & frame) const;
-	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction ori);
+	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir);
 
 	// DATA
 	int directionIndices[4];
@@ -28,4 +32,5 @@ private:
 	bool found;
 	std::vector<cv::Vec2i> worldCorners;
 	std::vector<cv::Vec2i> orderedCorners;
+	Direction currentDir;
 };
