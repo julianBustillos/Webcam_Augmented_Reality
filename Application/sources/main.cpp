@@ -5,6 +5,8 @@
 #include <constants.h>
 #include "cornerDetector.h"
 #include "markerRecognizer.h"
+#include <stdlib.h>
+#include <time.h>
 
 #ifdef DEBUG
 #include "debugInfo.h"
@@ -20,7 +22,7 @@ int main(int argc, char *argv[])
 	Webcam webcam;
 	GLManager glManager(webcam.getFrame());
 	CornerDetector detector(webcam.getWidth(), webcam.getHeight());
-	MarkerRecognizer recognizer;
+	MarkerRecognizer recognizer(webcam.getWidth(), webcam.getHeight());
 	std::cout << "INITIALIZATION ENDED" << std::endl << std::endl;
 
 	// Main loop

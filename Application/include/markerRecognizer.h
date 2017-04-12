@@ -8,7 +8,7 @@
 
 class MarkerRecognizer {
 public:
-	MarkerRecognizer();
+	MarkerRecognizer(int width, int height);
 	~MarkerRecognizer();
 	void searchMarker(const cv::Mat & frame, const std::vector<std::vector<cv::Vec2i>> & cornerGroups);
 	bool identified() const;
@@ -22,10 +22,12 @@ private:
 	void setA(const std::vector<cv::Vec2i> & corners);
 	void solveH();
 	cv::Vec2i getFrameCoordinates(float worldX, float worldY) const;
+	int getColor(const cv::Mat & frame, int i, int j) const;
 	Direction getDirection(const cv::Mat & frame) const;
 	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir);
 
 	// DATA
+	int frameSize[2];
 	int directionIndices[4];
 	cv::Mat A;
 	cv::Mat h;

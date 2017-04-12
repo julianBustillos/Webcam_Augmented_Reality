@@ -301,6 +301,10 @@ void DebugInfo::printTriangle(cv::Mat & frame, const std::vector<cv::Vec2i> & po
 
 void DebugInfo::printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer) const
 {
+	if (!recognizer.identified()) {
+		return;
+	}
+
 	std::vector<cv::Vec2i> corners = recognizer.getOrderedCorners();
 	Line currentLine;
 	cv::Vec2i prec;

@@ -1,21 +1,24 @@
 #include "markerRecognizer.h"
 #include "constants.h"
+#include "mathTools.h"
 
 
-MarkerRecognizer::MarkerRecognizer() :
+MarkerRecognizer::MarkerRecognizer(int width, int height) :
 	found(false)
 {
+	frameSize[0] = width;
+	frameSize[1] = height;
+
 	A = cv::Mat::zeros(8, 9, CV_32F);
 	orderedCorners.resize(4, cv::Vec2i(0, 0));
 	worldCorners.resize(4);
 
 	worldCorners[0] = cv::Vec2i(0, 0);
-	worldCorners[1] = cv::Vec2i(0, 1);
-	worldCorners[2] = cv::Vec2i(1, 1);
-	worldCorners[3] = cv::Vec2i(1, 0);
+	worldCorners[1] = cv::Vec2i(0, 10);
+	worldCorners[2] = cv::Vec2i(10, 10);
+	worldCorners[3] = cv::Vec2i(10, 0);
 
 	computeDirectionIndices();
-
 }
 
 MarkerRecognizer::~MarkerRecognizer()
@@ -53,24 +56,24 @@ std::vector<cv::Vec2i> MarkerRecognizer::getDirectionTriangle() const {
 
 	switch (currentDir) {
 	case Direction::UP:
-		triangle.push_back(getFrameCoordinates(0.5f, 0.3f));
-		triangle.push_back(getFrameCoordinates(0.7f, 0.7f));
-		triangle.push_back(getFrameCoordinates(0.3f, 0.7f));
+		triangle.push_back(getFrameCoordinates(5.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
 		break;
 	case Direction::LEFT:
-		triangle.push_back(getFrameCoordinates(0.3f, 0.5f));
-		triangle.push_back(getFrameCoordinates(0.7f, 0.7f));
-		triangle.push_back(getFrameCoordinates(0.7f, 0.3f));
+		triangle.push_back(getFrameCoordinates(3.0f, 5.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
 		break;
 	case Direction::DOWN:
-		triangle.push_back(getFrameCoordinates(0.5f, 0.7f));
-		triangle.push_back(getFrameCoordinates(0.3f, 0.3f));
-		triangle.push_back(getFrameCoordinates(0.7f, 0.3f));
+		triangle.push_back(getFrameCoordinates(5.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
 		break;
 	case Direction::RIGHT:
-		triangle.push_back(getFrameCoordinates(0.7f, 0.5f));
-		triangle.push_back(getFrameCoordinates(0.3f, 0.3f));
-		triangle.push_back(getFrameCoordinates(0.3f, 0.7f));
+		triangle.push_back(getFrameCoordinates(7.0f, 5.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
 		break;
 	default:
 		break;
@@ -150,13 +153,67 @@ cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) cons
 {
 	cv::Mat point = h * cv::Mat(cv::Vec3f(worldX, worldY, 1.0f));
 	point /= point.at<float>(2, 0);
-	
+
+	for (int dim = 0; dim < 2; dim++) {
+		if (point.at<float>(dim, 0) < 0.0f) {
+			point.at<float>(dim, 0) = 0.0f;
+		}
+		else if (point.at<float>(dim, 0) >= frameSize[dim]) {
+			point.at<float>(dim, 0) = (float)frameSize[dim];
+		}
+	}
+
 	return cv::Vec2i((int)point.at<float>(0, 0), (int)point.at<float>(1, 0));
 }
 
+int MarkerRecognizer::getColor(const cv::Mat & frame, int i, int j) const
+{
+	int count = 0;
+	int grayVal;
+	for (float x = j + 2.2f; x < j + 3.0f; x += 0.2f) {
+		for (float y = i + 2.2f; y < i + 3.0f; y += 0.2f) {
+			grayVal = MathTools::grayScaleValue(frame, getFrameCoordinates(x, y));
+			if (grayVal > 140) {
+				count--;
+			}
+			else if (grayVal < 120) {
+				count++;
+			}
+		}
+	}
+
+	return (count > 0) ? 1 : 0;
+}
+
 Direction MarkerRecognizer::getDirection(const cv::Mat & frame) const {
-	//TODO
-	return Direction::RIGHT;
+	cv::Mat matrix = cv::Mat::zeros(6, 6, CV_16S);
+	int identifier;
+
+	for (int j = 0; j < 6; j++) {
+		for (int i = 0; i < 6; i++) {
+			matrix.at<short>(i, j) = getColor(frame, i, j);
+		}
+	}
+
+	identifier = getRotateIdentifier(matrix, 0, 1, 0, 1, true);
+	
+	if (identifier == directionIndices[(int)Direction::UP]) {
+		return Direction::UP;
+	}
+
+	if (identifier == directionIndices[(int)Direction::RIGHT]) {
+		return Direction::RIGHT;
+	}
+
+	if (identifier == directionIndices[(int)Direction::DOWN]) {
+		return Direction::DOWN;
+	}
+
+	if (identifier == directionIndices[(int)Direction::LEFT]) {
+		return Direction::LEFT;
+	}
+
+	return Direction::UNKNOWN;
 }
 
 void MarkerRecognizer::computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir) {
