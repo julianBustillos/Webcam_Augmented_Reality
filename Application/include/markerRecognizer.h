@@ -25,6 +25,7 @@ private:
 	int getColor(const cv::Mat & frame, int i, int j) const;
 	Direction getDirection(const cv::Mat & frame) const;
 	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir);
+	void computeDirectionTriangle();
 
 	// DATA
 	int blackElementCount;
@@ -33,6 +34,8 @@ private:
 	cv::Mat A;
 	cv::Mat h;
 	bool found;
+	int lastFoundFrame;
+	std::vector<cv::Vec2i> triangle;
 	std::vector<cv::Vec2i> worldCorners;
 	std::vector<cv::Vec2i> orderedCorners;
 	Direction currentDir;

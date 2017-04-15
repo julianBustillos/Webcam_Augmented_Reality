@@ -93,6 +93,7 @@ void DebugInfo::parametersWindow()
 	cv::createTrackbar("BRIGHT", windowName, nullptr, 255, callbackInt, PTR(MIN_BRIGHTNESS));
 	cv::createTrackbar("CORNERS", windowName, nullptr, 1000, callbackFloatDist, PTR(MAX_DIST_CORNERS));
 	cv::createTrackbar("PARALLEL", windowName, nullptr, 360, callbackFloatDegree, PTR(PARALLELISM_TOLERANCE));
+	cv::createTrackbar("FRAMES", windowName, nullptr, 20, callbackInt, PTR(MAX_FRAMES));
 
 	// Set trackbars values
 	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
@@ -106,6 +107,7 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("BRIGHT", windowName, GET(MIN_BRIGHTNESS));
 	cv::setTrackbarPos("CORNERS", windowName, (int)(GET(MAX_DIST_CORNERS) * 100));
 	cv::setTrackbarPos("PARALLEL", windowName, (int)(GET(PARALLELISM_TOLERANCE) * 180 / M_PI));
+	cv::setTrackbarPos("FRAMES", windowName, GET(MAX_FRAMES));
 }
 
 bool DebugInfo::isPaused() const

@@ -4,7 +4,7 @@
 
 
 MarkerRecognizer::MarkerRecognizer(int width, int height) :
-	found(false)
+	found(false), lastFoundFrame(10)
 {
 	frameSize[0] = width;
 	frameSize[1] = height;
@@ -27,14 +27,21 @@ MarkerRecognizer::~MarkerRecognizer()
 
 void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std::vector<cv::Vec2i>> & cornerGroups) {
 	found = false;
+	lastFoundFrame++;
 	Direction dir;
+
 	for (int idx = 0; idx < cornerGroups.size(); idx++) {
 		setA(cornerGroups[idx]);
 		solveH();
 		dir = getDirection(frame);
 		if (dir != Direction::UNKNOWN) {
+#ifdef DEBUG
+			currentDir = dir;
+			computeDirectionTriangle();
+#endif
 			computeOrderedCorners(cornerGroups[idx], dir);
 			found = true;
+			lastFoundFrame = 0;
 			break;
 		}
 	}
@@ -42,7 +49,7 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 }
 
 bool MarkerRecognizer::identified() const {
-	return found;
+	return found || (lastFoundFrame < GET(MAX_FRAMES));
 }
 
 std::vector<cv::Vec2i> MarkerRecognizer::getOrderedCorners() const {
@@ -50,33 +57,6 @@ std::vector<cv::Vec2i> MarkerRecognizer::getOrderedCorners() const {
 }
 
 std::vector<cv::Vec2i> MarkerRecognizer::getDirectionTriangle() const {
-	std::vector<cv::Vec2i> triangle;
-	triangle.clear();
-
-	switch (currentDir) {
-	case Direction::UP:
-		triangle.push_back(getFrameCoordinates(5.0f, 3.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
-		break;
-	case Direction::LEFT:
-		triangle.push_back(getFrameCoordinates(3.0f, 5.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
-		break;
-	case Direction::DOWN:
-		triangle.push_back(getFrameCoordinates(5.0f, 7.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
-		break;
-	case Direction::RIGHT:
-		triangle.push_back(getFrameCoordinates(7.0f, 5.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
-		break;
-	default:
-		break;
-	}
 	return triangle;
 }
 
@@ -225,9 +205,6 @@ Direction MarkerRecognizer::getDirection(const cv::Mat & frame) const {
 
 void MarkerRecognizer::computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir) {
 
-#ifdef DEBUG
-	currentDir = dir;
-#endif
 	switch (dir) {
 	case Direction::UP:
 		orderedCorners[0] = corners[0];
@@ -252,6 +229,36 @@ void MarkerRecognizer::computeOrderedCorners(const std::vector<cv::Vec2i> corner
 		orderedCorners[1] = corners[0];
 		orderedCorners[2] = corners[1];
 		orderedCorners[3] = corners[2];
+		break;
+	default:
+		break;
+	}
+}
+
+void MarkerRecognizer::computeDirectionTriangle()
+{
+	triangle.clear();
+
+	switch (currentDir) {
+	case Direction::UP:
+		triangle.push_back(getFrameCoordinates(5.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
+		break;
+	case Direction::LEFT:
+		triangle.push_back(getFrameCoordinates(3.0f, 5.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
+		break;
+	case Direction::DOWN:
+		triangle.push_back(getFrameCoordinates(5.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
+		break;
+	case Direction::RIGHT:
+		triangle.push_back(getFrameCoordinates(7.0f, 5.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
 		break;
 	default:
 		break;
