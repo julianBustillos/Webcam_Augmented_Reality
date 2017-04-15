@@ -10,7 +10,13 @@ DebugInfo::DebugInfo() :
 	fpsCounter(0), realFps(0), theoricalFps(0), execTime(0.0),
 	windowName("DEBUG - PARAMETERS")
 {
-	std::cout << "### DEBUG MODE ENABLED ###" << std::endl << std::endl;
+	std::cout << "### DEBUG MODE ENABLED ###" << std::endl;
+	std::cout << std::endl;
+	std::cout << "# C -> Access to parameters window." << std::endl;
+	std::cout << "# F -> Show current FPS." << std::endl;
+	std::cout << "# M -> Switch between different modes." << std::endl;
+	std::cout << "# P -> Pause the video." << std::endl;
+	std::cout << std::endl;
 }
 
 DebugInfo::~DebugInfo()
