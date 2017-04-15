@@ -28,7 +28,6 @@ MarkerRecognizer::~MarkerRecognizer()
 void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std::vector<cv::Vec2i>> & cornerGroups) {
 	found = false;
 	Direction dir;
-
 	for (int idx = 0; idx < cornerGroups.size(); idx++) {
 		setA(cornerGroups[idx]);
 		solveH();
@@ -81,16 +80,20 @@ std::vector<cv::Vec2i> MarkerRecognizer::getDirectionTriangle() const {
 	return triangle;
 }
 
-cv::Mat MarkerRecognizer::getMarkerMatrix() const {
+cv::Mat MarkerRecognizer::getMarkerMatrix() {
 	cv::Mat marker = cv::Mat::zeros(6, 6, CV_16S);
 	int index = GET(ARTAG_ID);
+	blackElementCount = 0;
 
 	for (int i = 0; i < 6; i++) {
 		for (int j = 0; j < 6; j++) {
 			marker.at<short>(j, i) = (index >> (i + j * 6)) & 1;
+			if (marker.at<short>(j, i) == 1) {
+				blackElementCount++;  
+			}
 		}
 	}
-
+	std::cout << blackElementCount << std::endl;
 	return marker;
 }
 
@@ -158,8 +161,8 @@ cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) cons
 		if (point.at<float>(dim, 0) < 0.0f) {
 			point.at<float>(dim, 0) = 0.0f;
 		}
-		else if (point.at<float>(dim, 0) >= frameSize[dim]) {
-			point.at<float>(dim, 0) = (float)frameSize[dim];
+		else if (point.at<float>(dim, 0) >= frameSize[1 - dim]) {
+			point.at<float>(dim, 0) = (float)frameSize[1 - dim];
 		}
 	}
 
@@ -168,30 +171,34 @@ cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) cons
 
 int MarkerRecognizer::getColor(const cv::Mat & frame, int i, int j) const
 {
-	int count = 0;
-	int grayVal;
+	float grayVal = 0.0f;
 	for (float x = j + 2.2f; x < j + 3.0f; x += 0.2f) {
 		for (float y = i + 2.2f; y < i + 3.0f; y += 0.2f) {
-			grayVal = MathTools::grayScaleValue(frame, getFrameCoordinates(x, y));
-			if (grayVal > 140) {
-				count--;
-			}
-			else if (grayVal < 120) {
-				count++;
-			}
+			grayVal += MathTools::grayScaleValue(frame, getFrameCoordinates(x, y));
 		}
 	}
 
-	return (count > 0) ? 1 : 0;
+	return (int)(grayVal / 16);
 }
 
 Direction MarkerRecognizer::getDirection(const cv::Mat & frame) const {
 	cv::Mat matrix = cv::Mat::zeros(6, 6, CV_16S);
+	std::vector<int> grayValues;
+	grayValues.clear();
 	int identifier;
 
 	for (int i = 0; i < 6; i++) {
 		for (int j = 0; j < 6; j++) {
 			matrix.at<short>(i, j) = getColor(frame, i, j);
+			grayValues.push_back(matrix.at<short>(i, j));
+		}
+	}
+
+	std::sort(grayValues.begin(), grayValues.end());
+
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
+			matrix.at<short>(i, j) = (matrix.at<short>(i, j) < grayValues[blackElementCount]) ? 1 : 0;
 		}
 	}
 
@@ -220,10 +227,6 @@ void MarkerRecognizer::computeOrderedCorners(const std::vector<cv::Vec2i> corner
 
 #ifdef DEBUG
 	currentDir = dir;
-	std::cout << corners[0][0] << " " << corners[0][1] << std::endl;
-	std::cout << corners[1][0] << " " << corners[1][1] << std::endl;
-	std::cout << corners[2][0] << " " << corners[2][1] << std::endl;
-	std::cout << corners[3][0] << " " << corners[3][1] << std::endl;
 #endif
 	switch (dir) {
 	case Direction::UP:

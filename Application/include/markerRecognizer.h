@@ -16,7 +16,7 @@ public:
 	std::vector<cv::Vec2i> getDirectionTriangle() const;
 
 private:
-	cv::Mat getMarkerMatrix() const;
+	cv::Mat getMarkerMatrix();
 	int getRotateIdentifier(const cv::Mat & marker, int initI, int incrI, int initJ, int incrJ, bool reverse) const;
 	void computeDirectionIndices();
 	void setA(const std::vector<cv::Vec2i> & corners);
@@ -27,6 +27,7 @@ private:
 	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir);
 
 	// DATA
+	int blackElementCount;
 	int frameSize[2];
 	int directionIndices[4];
 	cv::Mat A;
