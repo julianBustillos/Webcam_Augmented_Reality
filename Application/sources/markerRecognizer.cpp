@@ -85,8 +85,8 @@ cv::Mat MarkerRecognizer::getMarkerMatrix() const {
 	cv::Mat marker = cv::Mat::zeros(6, 6, CV_16S);
 	int index = GET(ARTAG_ID);
 
-	for (int j = 0; j < 6; j++) {
-		for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
 			marker.at<short>(j, i) = (index >> (i + j * 6)) & 1;
 		}
 	}
@@ -119,9 +119,9 @@ void MarkerRecognizer::computeDirectionIndices() {
 	cv::Mat marker = getMarkerMatrix();
 
 	directionIndices[(int)Direction::UP] = getRotateIdentifier(marker, 0, 1, 0, 1, true);
-	directionIndices[(int)Direction::RIGHT] = getRotateIdentifier(marker, 0, 1, 5, -1, false);
+	directionIndices[(int)Direction::RIGHT] = getRotateIdentifier(marker, 5, -1, 0, 1, false);
 	directionIndices[(int)Direction::DOWN] = getRotateIdentifier(marker, 5, -1, 5, -1, true);
-	directionIndices[(int)Direction::LEFT] = getRotateIdentifier(marker, 5, -1, 0, 1, false);
+	directionIndices[(int)Direction::LEFT] = getRotateIdentifier(marker, 0, 1, 5, -1, false);
 }
 
 void MarkerRecognizer::setA(const std::vector<cv::Vec2i> & corners) {
@@ -189,8 +189,8 @@ Direction MarkerRecognizer::getDirection(const cv::Mat & frame) const {
 	cv::Mat matrix = cv::Mat::zeros(6, 6, CV_16S);
 	int identifier;
 
-	for (int j = 0; j < 6; j++) {
-		for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
 			matrix.at<short>(i, j) = getColor(frame, i, j);
 		}
 	}
@@ -220,6 +220,10 @@ void MarkerRecognizer::computeOrderedCorners(const std::vector<cv::Vec2i> corner
 
 #ifdef DEBUG
 	currentDir = dir;
+	std::cout << corners[0][0] << " " << corners[0][1] << std::endl;
+	std::cout << corners[1][0] << " " << corners[1][1] << std::endl;
+	std::cout << corners[2][0] << " " << corners[2][1] << std::endl;
+	std::cout << corners[3][0] << " " << corners[3][1] << std::endl;
 #endif
 	switch (dir) {
 	case Direction::UP:
