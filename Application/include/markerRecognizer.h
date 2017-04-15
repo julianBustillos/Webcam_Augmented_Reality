@@ -34,6 +34,7 @@ private:
 	cv::Mat A;
 	cv::Mat h;
 	bool found;
+	bool foundOnce;
 	int lastFoundFrame;
 	std::vector<cv::Vec2i> triangle;
 	std::vector<cv::Vec2i> worldCorners;

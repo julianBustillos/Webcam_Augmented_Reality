@@ -4,7 +4,7 @@
 
 
 MarkerRecognizer::MarkerRecognizer(int width, int height) :
-	found(false), lastFoundFrame(10)
+	found(false), foundOnce(false), lastFoundFrame(GET(MAX_FRAMES))
 {
 	frameSize[0] = width;
 	frameSize[1] = height;
@@ -41,11 +41,21 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 #endif
 			computeOrderedCorners(cornerGroups[idx], dir);
 			found = true;
+			foundOnce = true;
 			lastFoundFrame = 0;
-			break;
+			return;
 		}
 	}
 
+	if (foundOnce) {
+		setA(orderedCorners);
+		solveH();
+		dir = getDirection(frame);
+		if (dir != Direction::UNKNOWN) {
+			found = true;
+			lastFoundFrame = 0;
+		}
+	}
 }
 
 bool MarkerRecognizer::identified() const {
@@ -73,7 +83,7 @@ cv::Mat MarkerRecognizer::getMarkerMatrix() {
 			}
 		}
 	}
-	std::cout << blackElementCount << std::endl;
+
 	return marker;
 }
 
