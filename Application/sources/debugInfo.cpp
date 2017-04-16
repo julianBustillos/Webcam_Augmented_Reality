@@ -79,7 +79,7 @@ void DebugInfo::parametersWindow()
 {
 	// Create window
 	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
-	cv::resizeWindow(windowName, 290, 470);
+	cv::resizeWindow(windowName, 290, 550);
 
 	//Create trackbars
 	cv::createTrackbar("INTENSITY", windowName, nullptr, 200, callbackInt, PTR(INTENSITY_THRESHOLD));
@@ -94,6 +94,7 @@ void DebugInfo::parametersWindow()
 	cv::createTrackbar("CORNERS", windowName, nullptr, 1000, callbackFloatDist, PTR(MAX_DIST_CORNERS));
 	cv::createTrackbar("PARALLEL", windowName, nullptr, 360, callbackFloatDegree, PTR(PARALLELISM_TOLERANCE));
 	cv::createTrackbar("FRAMES", windowName, nullptr, 20, callbackInt, PTR(MAX_FRAMES));
+	cv::createTrackbar("ROI", windowName, nullptr, 100, callbackInt, PTR(ROI_MARGIN));
 
 	// Set trackbars values
 	cv::setTrackbarPos("INTENSITY", windowName, GET(INTENSITY_THRESHOLD));
@@ -108,6 +109,7 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("CORNERS", windowName, (int)(GET(MAX_DIST_CORNERS) * 100));
 	cv::setTrackbarPos("PARALLEL", windowName, (int)(GET(PARALLELISM_TOLERANCE) * 180 / M_PI));
 	cv::setTrackbarPos("FRAMES", windowName, GET(MAX_FRAMES));
+	cv::setTrackbarPos("ROI", windowName, GET(ROI_MARGIN));
 }
 
 bool DebugInfo::isPaused() const
@@ -185,11 +187,11 @@ void DebugInfo::printRegions(cv::Mat & frame, const CornerDetector & detector) c
 	int jMin = std::max(0, detector.getRegionOrigin()[1]);
 	int jMax = std::min(frame.size().width, jMin + detector.getRegionNumber()[1] * GET(REGION_PIXEL_SIZE));
 
-	for (int i = iMin; i < iMax; i += GET(REGION_PIXEL_SIZE)) {
+	for (int i = iMin; i <= iMax; i += GET(REGION_PIXEL_SIZE)) {
 		cv::line(frame, cv::Vec2i(jMin, i), cv::Vec2i(jMax, i), orange, 1);
 	}
 
-	for (int j = jMin; j < jMax; j += GET(REGION_PIXEL_SIZE)) {
+	for (int j = jMin; j <= jMax; j += GET(REGION_PIXEL_SIZE)) {
 		cv::line(frame, cv::Vec2i(j, iMin), cv::Vec2i(j, iMax), orange, 1);
 	}
 }
@@ -320,6 +322,7 @@ void DebugInfo::printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer
 	lineList.clear();
 	cv::Scalar green(0, 255, 0);
 	cv::Scalar greenBright(102, 255, 102);
+	cv::Scalar redBright(51, 51, 255);
 
 	// Print marker border
 	prec = corners[corners.size() - 1];
@@ -335,6 +338,23 @@ void DebugInfo::printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer
 	// Print marker direction
 	std::vector<cv::Vec2i> triangle = recognizer.getDirectionTriangle();
 	printTriangle(frame, triangle, greenBright);
+
+	// Print ROI
+	std::vector<cv::Vec2i> ROI = recognizer.getROI();
+	if (ROI.empty()) {
+		return;
+	}
+	lineList.clear();
+	prec = ROI[1];
+	for (int i = 0; i < 2; i++) {
+		for (int j = 1; j > -1; j--) {
+			currentLine.p1 = prec;
+			currentLine.p2 = cv::Vec2i(ROI[i][0], ROI[abs(j - i)][1]);
+			prec = currentLine.p2;
+			lineList.push_back(currentLine);
+		}
+	}
+	printLineList(frame, lineList, redBright);
 }
 
 

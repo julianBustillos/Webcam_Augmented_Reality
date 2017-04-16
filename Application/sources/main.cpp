@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 	while (glManager.running()) {
 		glManager.event();
 		webcam.read();
+		detector.setROI(recognizer.getROI());
 		detector.execute(webcam.getFrame());
 		recognizer.searchMarker(webcam.getFrame(), detector.getCornerGroupsList());
 #ifdef DEBUG

@@ -77,7 +77,28 @@ std::vector<cv::Vec2i> MarkerRecognizer::getROI() const
 	std::vector<cv::Vec2i> ROI;
 	ROI.clear();
 
-	//TODO
+	if (identified()) {
+		cv::Vec2i min = orderedCorners[0];
+		cv::Vec2i max = orderedCorners[0];
+
+		for (int idx = 0; idx < 4; idx++) {
+			min[0] = std::min(min[0], orderedCorners[idx][0]);
+			min[1] = std::min(min[1], orderedCorners[idx][1]);
+			max[0] = std::max(max[0], orderedCorners[idx][0]);
+			max[1] = std::max(max[1], orderedCorners[idx][1]);
+		}
+
+		min = min - GET(ROI_MARGIN) / 100.0f * (max - min);
+		max = max + GET(ROI_MARGIN) / 100.0f * (max - min);
+
+		min[0] = std::max(0, min[0]);
+		min[1] = std::max(0, min[1]);
+		max[0] = std::min(frameSize[1], max[0]);
+		max[1] = std::min(frameSize[0], max[1]);
+
+		ROI.push_back(min);
+		ROI.push_back(max);
+	}
 
 	return ROI;
 }

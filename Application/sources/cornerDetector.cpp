@@ -14,10 +14,10 @@ CornerDetector::CornerDetector(int width, int height) :
 {
 	frameSize[0] = height;
 	frameSize[1] = width;
-	regionOrigin[0] = 0;
-	regionOrigin[1] = 0;
-	regionNumber[0] = (int)ceil((float)height / GET(REGION_PIXEL_SIZE));
-	regionNumber[1] = (int)ceil((float)width / GET(REGION_PIXEL_SIZE));
+	
+	std::vector<cv::Vec2i> ROI;
+	ROI.clear();
+	setROI(ROI);
 	
 	regionGrid.resize(regionNumber[0]);
 	for (int i = 0; i < regionGrid.size(); i++) {
@@ -72,6 +72,22 @@ const std::vector<Line> CornerDetector::getExtendedLineList() const
 const std::vector<std::vector<cv::Vec2i>> CornerDetector::getCornerGroupsList() const
 {
 	return cornerGroups;
+}
+
+void CornerDetector::setROI(const std::vector<cv::Vec2i> & ROI)
+{
+	if (ROI.empty()) {
+		regionOrigin[0] = 0;
+		regionOrigin[1] = 0;
+		regionNumber[0] = (int)ceil((float)frameSize[0] / GET(REGION_PIXEL_SIZE));
+		regionNumber[1] = (int)ceil((float)frameSize[1] / GET(REGION_PIXEL_SIZE));
+	}
+	else {
+		regionOrigin[0] = ROI[0][0];
+		regionOrigin[1] = ROI[0][1];
+		regionNumber[0] = (int)ceil((float)(ROI[1][0] - ROI[0][0]) / GET(REGION_PIXEL_SIZE));
+		regionNumber[1] = (int)ceil((float)(ROI[1][1] - ROI[0][1]) / GET(REGION_PIXEL_SIZE));
+	}
 }
 
 const std::vector<Edgel> CornerDetector::getEdgelList() const
@@ -156,7 +172,7 @@ void CornerDetector::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelTy
 		for (int scanIdx = 0; scanIdx < scanline.size(); scanIdx++) {
 
 			// Get all scanline values
-			cv::Vec2i position = scanIdx * scanDir + strideIdx * strideDir;
+			cv::Vec2i position = (scanIdxFirst + scanIdx) * scanDir + strideIdx * strideDir;
 			scanline[scanIdx] = MathTools::convolution(frame, frameSize, filter, position, scanDir, 0);
 
 		}
@@ -165,7 +181,7 @@ void CornerDetector::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelTy
 		getAbsArgmaxList(argList, scanline);
 		for (int argIdx = 0; argIdx < argList.size(); argIdx++) {
 
-			cv::Vec2i position = argList[argIdx] * scanDir + strideIdx * strideDir;
+			cv::Vec2i position = (scanIdxFirst + argList[argIdx]) * scanDir + strideIdx * strideDir;
 			int channel1Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 1);
 			int channel2Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 2);
 

@@ -18,6 +18,7 @@ public:
 	const std::vector<Line> getMergedLineList() const;
 	const std::vector<Line> getExtendedLineList() const;
 	const std::vector<std::vector<cv::Vec2i>> getCornerGroupsList() const;
+	void setROI(const std::vector<cv::Vec2i> & ROI);
 	double getLastExecTime() const;
 
 private:
