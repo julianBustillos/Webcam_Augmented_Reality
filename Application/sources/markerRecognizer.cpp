@@ -39,6 +39,7 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 			currentDir = dir;
 			computeDirectionTriangle();
 #endif
+			unorderedCorners = cornerGroups[idx];
 			computeOrderedCorners(cornerGroups[idx], dir);
 			found = true;
 			foundOnce = true;
@@ -48,10 +49,11 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 	}
 
 	if (foundOnce) {
-		setA(orderedCorners);
+		setA(unorderedCorners);
 		solveH();
 		dir = getDirection(frame);
 		if (dir != Direction::UNKNOWN) {
+			computeOrderedCorners(unorderedCorners, dir);
 			found = true;
 			lastFoundFrame = 0;
 		}
@@ -68,6 +70,16 @@ std::vector<cv::Vec2i> MarkerRecognizer::getOrderedCorners() const {
 
 std::vector<cv::Vec2i> MarkerRecognizer::getDirectionTriangle() const {
 	return triangle;
+}
+
+std::vector<cv::Vec2i> MarkerRecognizer::getROI() const
+{
+	std::vector<cv::Vec2i> ROI;
+	ROI.clear();
+
+	//TODO
+
+	return ROI;
 }
 
 cv::Mat MarkerRecognizer::getMarkerMatrix() {

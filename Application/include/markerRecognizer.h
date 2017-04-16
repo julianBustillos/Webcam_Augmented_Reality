@@ -14,6 +14,7 @@ public:
 	bool identified() const;
 	std::vector<cv::Vec2i> getOrderedCorners() const;
 	std::vector<cv::Vec2i> getDirectionTriangle() const;
+	std::vector<cv::Vec2i> getROI() const;
 
 private:
 	cv::Mat getMarkerMatrix();
@@ -38,6 +39,7 @@ private:
 	int lastFoundFrame;
 	std::vector<cv::Vec2i> triangle;
 	std::vector<cv::Vec2i> worldCorners;
+	std::vector<cv::Vec2i> unorderedCorners;
 	std::vector<cv::Vec2i> orderedCorners;
 	Direction currentDir;
 };
