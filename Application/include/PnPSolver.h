@@ -11,10 +11,13 @@ public:
 	void solve(std::vector<cv::Vec2i> corners);
 
 private:
+	void computeFocalLength();
 	void computeControlPoints();
 	void computeBarycentricCoords();
 
 	//DATA
+	double fu;
+	double fv;
 	const int uc;
 	const int vc;
 	cv::Vec3d pw[4];

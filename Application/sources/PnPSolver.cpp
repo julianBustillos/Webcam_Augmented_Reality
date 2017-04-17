@@ -1,4 +1,6 @@
 #include "PnPSolver.h"
+#include "constants.h"
+
 
 PnPSolver::PnPSolver(int width, int height) :
 	uc(width / 2), vc(height / 2)
@@ -8,6 +10,7 @@ PnPSolver::PnPSolver(int width, int height) :
 	pw[2] = cv::Vec3d(10.0, 10.0,  0.0);
 	pw[3] = cv::Vec3d(10.0,  0.0,  0.0);
 
+	computeFocalLength();
 	computeControlPoints();
 	computeBarycentricCoords();
 }
@@ -19,6 +22,11 @@ PnPSolver::~PnPSolver()
 void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 {
 
+}
+
+void PnPSolver::computeFocalLength()
+{
+	fu = fv = sqrt(uc * uc + vc * vc) / tan(GET(DFOV) * M_PI / 360);
 }
 
 void PnPSolver::computeControlPoints()
