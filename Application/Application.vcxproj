@@ -141,6 +141,7 @@
     <ClCompile Include="sources\main.cpp" />
     <ClCompile Include="sources\markerRecognizer.cpp" />
     <ClCompile Include="sources\mathTools.cpp" />
+    <ClCompile Include="sources\PnPSolver.cpp" />
     <ClCompile Include="sources\shader.cpp" />
     <ClCompile Include="sources\webcam.cpp" />
   </ItemGroup>
@@ -157,6 +158,7 @@
     <ClInclude Include="include\constants.h" />
     <ClInclude Include="include\markerRecognizer.h" />
     <ClInclude Include="include\mathTools.h" />
+    <ClInclude Include="include\PnPSolver.h" />
     <ClInclude Include="include\shader.h" />
     <ClInclude Include="include\webcam.h" />
   </ItemGroup>

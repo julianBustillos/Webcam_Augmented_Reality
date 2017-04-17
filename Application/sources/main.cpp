@@ -7,6 +7,7 @@
 #include "markerRecognizer.h"
 #include <stdlib.h>
 #include <time.h>
+#include "PnPSolver.h"
 
 #ifdef DEBUG
 #include "debugInfo.h"
@@ -23,6 +24,7 @@ int main(int argc, char *argv[])
 	GLManager glManager(webcam.getFrame());
 	CornerDetector detector(webcam.getWidth(), webcam.getHeight());
 	MarkerRecognizer recognizer(webcam.getWidth(), webcam.getHeight());
+	PnPSolver pnp(webcam.getWidth(), webcam.getHeight());
 	std::cout << "INITIALIZATION ENDED" << std::endl << std::endl;
 
 	// Main loop
@@ -32,6 +34,9 @@ int main(int argc, char *argv[])
 		detector.setROI(recognizer.getROI());
 		detector.execute(webcam.getFrame());
 		recognizer.searchMarker(webcam.getFrame(), detector.getCornerGroupsList());
+		if (recognizer.identified()) {
+			pnp.solve(recognizer.getOrderedCorners());
+		}
 #ifdef DEBUG
 		info.printOnFrame(webcam.getFrame(), detector, recognizer);
 #endif
