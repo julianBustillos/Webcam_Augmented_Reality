@@ -9,8 +9,7 @@
 #endif
 
 
-CornerDetector::CornerDetector(int width, int height) :
-	lastExecTime(0.0)
+CornerDetector::CornerDetector(int width, int height)
 {
 	frameSize[0] = height;
 	frameSize[1] = width;
@@ -33,20 +32,11 @@ CornerDetector::~CornerDetector()
 
 void CornerDetector::execute(const cv::Mat & frame)
 {
-#ifdef DEBUG
-	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-#endif
-
 	findEdgels(frame);
 	RANSACGrouper();
 	mergeLines(frame);
 	extendLines(frame);
 	detectCorners();
-
-#ifdef DEBUG
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	lastExecTime = std::chrono::duration<double>(end - start).count();
-#endif
 }
 
 const cv::Vec2i CornerDetector::getRegionOrigin() const
@@ -809,9 +799,4 @@ void CornerDetector::getLineGroup(std::deque<int>& linesGroup, const std::deque<
 	for (int idx = 0; idx < indexList.size(); idx++) {
 		linesGroup.push_back(availableLines[indexList[idx]]);
 	}
-}
-
-double CornerDetector::getLastExecTime() const
-{
-	return lastExecTime;
 }

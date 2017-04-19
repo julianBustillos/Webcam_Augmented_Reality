@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
 	while (glManager.running()) {
 		glManager.event();
 		webcam.read();
+#ifdef DEBUG
+		std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+#endif
 		detector.setROI(recognizer.getROI());
 		detector.execute(webcam.getFrame());
 		recognizer.searchMarker(webcam.getFrame(), detector.getCornerGroupsList());
@@ -38,7 +41,9 @@ int main(int argc, char *argv[])
 			pnp.solve(recognizer.getOrderedCorners());
 		}
 #ifdef DEBUG
-		info.printOnFrame(webcam.getFrame(), detector, recognizer);
+		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+		double time = std::chrono::duration<double>(end - start).count();
+		info.printOnFrame(webcam.getFrame(), time, detector, recognizer);
 #endif
 		glManager.drawFrame(webcam.getFrame());
 		glManager.swapBuffers();

@@ -19,7 +19,6 @@ public:
 	const std::vector<Line> getExtendedLineList() const;
 	const std::vector<std::vector<cv::Vec2i>> getCornerGroupsList() const;
 	void setROI(const std::vector<cv::Vec2i> & ROI);
-	double getLastExecTime() const;
 
 private:
 	void reinitNeededRegions();
@@ -50,7 +49,6 @@ private:
 	void getLineGroup(std::deque<int> & lineGroup, const std::deque<int> & indexList, const std::vector<int> & availableLines) const;
 
 	// DATA
-	double lastExecTime;
 	cv::Vec2i frameSize;
 	cv::Vec2i regionOrigin;
 	cv::Vec2i regionNumber;
