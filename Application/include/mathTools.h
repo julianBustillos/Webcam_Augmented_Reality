@@ -19,4 +19,7 @@ public:
 	static cv::Vec2i averagePoint(cv::Vec2i p1, cv::Vec2i p2);
 	static cv::Vec2i linesIntersection(cv::Vec2i l1p1, cv::Vec2i l1p2, cv::Vec2i l2p1, cv::Vec2i l2p2);
 	static float mod2Pi(float val);
+	static double diffSquareNorm(cv::Vec3d vec1, cv::Vec3d vec2);
+	static double det3x3(const cv::Mat & mat);
+	static double trace3x1(const cv::Mat & mat);
 };

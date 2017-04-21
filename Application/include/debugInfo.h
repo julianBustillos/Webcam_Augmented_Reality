@@ -33,12 +33,12 @@ public:
 	void nextFPS();
 	void nextMode();
 	void nextPause();
-	void printOnFrame(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer);
+	void printOnFrame(cv::Mat & frame, double time, const CornerDetector & detector, const MarkerRecognizer & recognizer);
 	void parametersWindow();
 	bool isPaused() const;
 
 private:
-	void updateFPS(const CornerDetector & detector);
+	void updateFPS(double time);
 	void print(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer) const;
 	void printFPS(cv::Mat & frame, const CornerDetector & detector) const;
 	void printRegions(cv::Mat & frame, const CornerDetector & detector) const;

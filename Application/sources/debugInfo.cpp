@@ -69,9 +69,9 @@ void DebugInfo::nextPause()
 	pause = Active(((int)pause + 1) % (int)Active::SIZE);
 }
 
-void DebugInfo::printOnFrame(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer)
+void DebugInfo::printOnFrame(cv::Mat & frame, double time, const CornerDetector & detector, const MarkerRecognizer & recognizer)
 {
-	updateFPS(detector);
+	updateFPS(time);
 	print(frame, detector, recognizer);
 }
 
@@ -117,11 +117,11 @@ bool DebugInfo::isPaused() const
 	return pause == Active::ENABLED;
 }
 
-void DebugInfo::updateFPS(const CornerDetector & detector)
+void DebugInfo::updateFPS(double time)
 {
 	end = std::chrono::steady_clock::now();
 	fpsCounter++;
-	execTime += detector.getLastExecTime();
+	execTime += time;
 	if (std::chrono::duration<double>(end - start).count() >= 1.0) {
 		realFps = (int)ceil(fpsCounter / std::chrono::duration<double>(end - start).count());
 		theoricalFps = (int)ceil(fpsCounter / execTime);

@@ -96,6 +96,47 @@ float MathTools::mod2Pi(float val)
 	return val;
 }
 
+double MathTools::diffSquareNorm(cv::Vec3d vec1, cv::Vec3d vec2)
+{
+	cv::Vec3d diff = vec2 - vec1;
+	return diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
+}
+
+double MathTools::det3x3(const cv::Mat & mat)
+{
+	double det = 0.;
+	double temp;
+
+	for (int i = 0; i < 3; i++) {
+		temp = 1.;
+		for (int j = 0; j < 3; j++) {
+			temp *= mat.at<double>((i + j) % 3, j);
+		}
+		det += temp;
+	}
+
+	for (int i = 0; i < 3; i++) {
+		temp = 1.;
+		for (int j = 0; j < 3; j++) {
+			temp *= mat.at<double>((i + (2 - j)) % 3, j);
+		}
+		det -= temp;
+	}
+
+	return det;
+}
+
+double MathTools::trace3x1(const cv::Mat & mat)
+{
+	double trace = 0.;
+
+	for (int i = 0; i < 3; i++) {
+		trace += mat.at<double>(i, 0);
+	}
+
+	return trace;
+}
+
 float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];
