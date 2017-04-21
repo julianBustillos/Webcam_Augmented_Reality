@@ -185,7 +185,7 @@ cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) cons
 			point.at<float>(dim, 0) = 0.0f;
 		}
 		else if (point.at<float>(dim, 0) >= frameSize[1 - dim]) {
-			point.at<float>(dim, 0) = (float)frameSize[1 - dim];
+			point.at<float>(dim, 0) = (float)frameSize[1 - dim] - 1.0f;
 		}
 	}
 
