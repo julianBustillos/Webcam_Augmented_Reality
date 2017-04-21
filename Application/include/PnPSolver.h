@@ -10,6 +10,7 @@ public:
 	~PnPSolver();
 	void solve(std::vector<cv::Vec2i> corners);
 	cv::Vec3d getPointCameraCoords(cv::Vec3d point) const;
+	cv::Vec3d getPointWorldCoords(cv::Vec3d point) const;
 
 private:
 	void computeFocalLength();
@@ -37,5 +38,6 @@ private:
 	double beta;
 	double c;
 	cv::Mat R;
+	cv::Mat R_inv;
 	cv::Mat t;
 };

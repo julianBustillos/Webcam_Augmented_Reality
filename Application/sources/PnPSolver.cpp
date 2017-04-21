@@ -18,6 +18,7 @@ PnPSolver::PnPSolver(int width, int height)
 	vDist = cv::Mat::zeros(3, 1, CV_64F);
 	cwDist = cv::Mat::zeros(3, 1, CV_64F);
 	R = cv::Mat::zeros(3, 3, CV_64F);
+	R_inv = cv::Mat::zeros(3, 3, CV_64F);
 	t = cv::Mat::zeros(3, 1, CV_64F);
 
 	computeFocalLength();
@@ -40,6 +41,12 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 	computeBeta();
 	computePC();
 	estimateTransformation();
+
+	std::cout << getPointCameraCoords(pw[0]) << std::endl;
+	std::cout << getPointCameraCoords(pw[1]) << std::endl;
+	std::cout << getPointCameraCoords(pw[2]) << std::endl;
+	std::cout << getPointCameraCoords(pw[3]) << std::endl;
+	std::cout << std::endl;
 }
 
 cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
@@ -54,6 +61,20 @@ cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
 	pointC = c * R * pointW + t;
 
 	return cv::Vec3d(pointC);
+}
+
+cv::Vec3d PnPSolver::getPointWorldCoords(cv::Vec3d point) const
+{
+	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
+
+	pointC.at<double>(0, 0) = point[0];
+	pointC.at<double>(1, 0) = point[1];
+	pointC.at<double>(2, 0) = point[2];
+
+	pointW = R_inv * (pointW - t) / c;
+
+	return cv::Vec3d(pointW);
 }
 
 void PnPSolver::computeFocalLength()
@@ -216,6 +237,7 @@ void PnPSolver::estimateTransformation()
 	}
 
 	R = U * S * Vt;
+	R_inv = R.inv();
 	t = mu.col(1) - R * mu.col(0);
 	c = MathTools::trace3x1(S * D) / sigma;
 	
