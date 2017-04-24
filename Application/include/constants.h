@@ -2,6 +2,7 @@
 
 #include "debug.h"
 #include <vector>
+#include <string>
 
 
 // TROGONOMETRY
@@ -25,8 +26,9 @@
 
 class CONSTANTS {
 public:
-	// MARKER ID
+	// GENERAL PARAMETERS
 	DECLARE(int, ARTAG_ID);
+	DECLARE(std::string, MESH_PATH);
 
 	// EDGELS DETECTION PARAMETERS
 	DECLARE(int, REGION_PIXEL_SIZE);

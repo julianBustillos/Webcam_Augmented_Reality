@@ -10,9 +10,9 @@ PnPSolver::PnPSolver(int width, int height)
 	uc[1] = width / 2
 		;
 	pw[0] = cv::Vec3d (0.,  0.,  0.);
-	pw[1] = cv::Vec3d( 0., 10.,  0.);
-	pw[2] = cv::Vec3d(10., 10.,  0.);
-	pw[3] = cv::Vec3d(10.,  0.,  0.);
+	pw[1] = cv::Vec3d(10.,  0.,  0.);
+	pw[2] = cv::Vec3d(10.,  0., 10.);
+	pw[3] = cv::Vec3d( 0.,  0., 10.);
 
 	M = cv::Mat::zeros(8, 9, CV_64F);
 	vDist = cv::Mat::zeros(3, 1, CV_64F);
@@ -42,11 +42,7 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 	computePC();
 	estimateTransformation();
 
-	std::cout << getPointCameraCoords(pw[0]) << std::endl;
-	std::cout << getPointCameraCoords(pw[1]) << std::endl;
-	std::cout << getPointCameraCoords(pw[2]) << std::endl;
-	std::cout << getPointCameraCoords(pw[3]) << std::endl;
-	std::cout << std::endl;
+	std::cout << getMeanReprojectionError() << std::endl;
 }
 
 cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const

@@ -6,8 +6,8 @@
 
 Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath)
 {
-	bool init_OK = true
-		;
+	bool init_OK = true;
+
 	// 1. Retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
 	std::string fragmentCode;
@@ -92,4 +92,9 @@ Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath)
 void Shader::use()
 {
 	glUseProgram(this->programId);
+}
+
+GLuint Shader::getProgramId() const
+{
+	return programId;
 }

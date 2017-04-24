@@ -141,6 +141,7 @@
     <ClCompile Include="sources\main.cpp" />
     <ClCompile Include="sources\markerRecognizer.cpp" />
     <ClCompile Include="sources\mathTools.cpp" />
+    <ClCompile Include="sources\mesh.cpp" />
     <ClCompile Include="sources\PnPSolver.cpp" />
     <ClCompile Include="sources\shader.cpp" />
     <ClCompile Include="sources\webcam.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="include\constants.h" />
     <ClInclude Include="include\markerRecognizer.h" />
     <ClInclude Include="include\mathTools.h" />
+    <ClInclude Include="include\mesh.h" />
     <ClInclude Include="include\PnPSolver.h" />
     <ClInclude Include="include\shader.h" />
     <ClInclude Include="include\webcam.h" />
@@ -168,6 +170,7 @@
     <Import Project="..\packages\glfw.3.2.1\build\native\glfw.targets" Condition="Exists('..\packages\glfw.3.2.1\build\native\glfw.targets')" />
     <Import Project="..\packages\unofficial-flayan-glew.redist.2.0.0\build\native\unofficial-flayan-glew.redist.targets" Condition="Exists('..\packages\unofficial-flayan-glew.redist.2.0.0\build\native\unofficial-flayan-glew.redist.targets')" />
     <Import Project="..\packages\unofficial-flayan-glew.2.0.0\build\native\unofficial-flayan-glew.targets" Condition="Exists('..\packages\unofficial-flayan-glew.2.0.0\build\native\unofficial-flayan-glew.targets')" />
+    <Import Project="..\packages\unofficial.flayan.glm.0.9.8.4\build\native\unofficial.flayan.glm.targets" Condition="Exists('..\packages\unofficial.flayan.glm.0.9.8.4\build\native\unofficial.flayan.glm.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -177,5 +180,6 @@
     <Error Condition="!Exists('..\packages\glfw.3.2.1\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glfw.3.2.1\build\native\glfw.targets'))" />
     <Error Condition="!Exists('..\packages\unofficial-flayan-glew.redist.2.0.0\build\native\unofficial-flayan-glew.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\unofficial-flayan-glew.redist.2.0.0\build\native\unofficial-flayan-glew.redist.targets'))" />
     <Error Condition="!Exists('..\packages\unofficial-flayan-glew.2.0.0\build\native\unofficial-flayan-glew.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\unofficial-flayan-glew.2.0.0\build\native\unofficial-flayan-glew.targets'))" />
+    <Error Condition="!Exists('..\packages\unofficial.flayan.glm.0.9.8.4\build\native\unofficial.flayan.glm.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\unofficial.flayan.glm.0.9.8.4\build\native\unofficial.flayan.glm.targets'))" />
   </Target>
 </Project>

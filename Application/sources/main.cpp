@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		double time = std::chrono::duration<double>(end - start).count();
 		info.printOnFrame(webcam.getFrame(), time, detector, recognizer);
 #endif
-		glManager.drawFrame(webcam.getFrame());
+		glManager.draw(webcam.getFrame());
 		glManager.swapBuffers();
 	}
 

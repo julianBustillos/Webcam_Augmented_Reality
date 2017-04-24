@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "shader.h"
 #include <opencv2/opencv.hpp>
+#include "mesh.h"
 
 
 class GLManager {
@@ -13,17 +14,36 @@ public:
 	void event() const;
 	bool running() const;
 	void swapBuffers() const;
-	void drawFrame(const cv::Mat & frame) const;
+	void draw(const cv::Mat & frame) const;
 
 private:
-	GLFWwindow* window;
-	Shader* frameShader;
+	void initContext();
+	void initShaders();
+	void initFrameQuad();
+	void initTexture(const cv::Mat & frame);
+	void initMesh();
+	void initUniform();
+
+	// DATA
+	int width;
+	int height;
+	GLFWwindow *window;
+
+	Shader *frameShader;
 	GLuint frameVAO;
 	GLuint frameVBO;
 	GLuint frameEBO;
 	GLuint frameTexture;
-	void initContext(int width, int height);
-	void initShaders();
-	void initFrameQuad();
-	void initTexture(const cv::Mat & frame);
+
+	Mesh mesh;
+	Shader *meshShader;
+	GLuint meshVAO;
+	GLuint meshVBO;
+	GLuint meshEBO;
+
+	GLint lightPosLoc;
+	GLint viewPosLoc;
+	GLint modelLoc;
+	GLint viewLoc;
+	GLint projLoc;
 };
