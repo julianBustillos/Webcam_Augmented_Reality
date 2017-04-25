@@ -41,36 +41,33 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 	computeBeta();
 	computePC();
 	estimateTransformation();
-
-	std::cout << getMeanReprojectionError() << std::endl;
 }
 
-cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
+glm::vec3 PnPSolver::getCameraPosition() const
 {
-	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Vec3d cameraPositionC = cv::Vec3d(0.0f, 0.0f, 0.0f);
+	cv::Vec3d cameraPositionW = getPointWorldCoords(cameraPositionC);
 
-	pointW.at<double>(0, 0) = point[0];
-	pointW.at<double>(1, 0) = point[1];
-	pointW.at<double>(2, 0) = point[2];
-
-	pointC = c * R * pointW + t;
-
-	return cv::Vec3d(pointC);
+	std::cout << "POSITION : " << cameraPositionW << std::endl;
+	return worldToOpenGLCoords(cameraPositionW);
 }
 
-cv::Vec3d PnPSolver::getPointWorldCoords(cv::Vec3d point) const
+glm::vec3 PnPSolver::getCameraFront() const
 {
-	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Vec3d cameraFrontC = cv::Vec3d(0.0f, 0.0f, -1.0f);
+	cv::Vec3d cameraFrontW = getPointWorldCoords(cameraFrontC);
 
-	pointC.at<double>(0, 0) = point[0];
-	pointC.at<double>(1, 0) = point[1];
-	pointC.at<double>(2, 0) = point[2];
+	std::cout << "FRONT    : " << cameraFrontW << std::endl;
+	return glm::vec3(0.0f, -1.0f, 0.0f);
+}
 
-	pointW = R_inv * (pointW - t) / c;
+glm::vec3 PnPSolver::getCameraUp() const
+{
+	cv::Vec3d cameraUpC = cv::Vec3d(0.0f, 1.0f, 0.0f);
+	cv::Vec3d cameraUpW = getPointWorldCoords(cameraUpC);
 
-	return cv::Vec3d(pointW);
+	std::cout << "UP       : " << cameraUpW << std::endl;
+	return glm::vec3(0.0f, 0.0f, -1.0f);
 }
 
 void PnPSolver::computeFocalLength()
@@ -243,18 +240,42 @@ double PnPSolver::getMeanReprojectionError() const
 {
 	double error = 0.;
 
-	cv::Mat pcProj = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat pwi = cv::Mat::zeros(3, 1, CV_64F);
-
 	for (int i = 0; i < 4; i++) {
-		pwi.at<double>(0, 0) = pw[i][0];
-		pwi.at<double>(1, 0) = pw[i][1];
-		pwi.at<double>(2, 0) = pw[i][2];
-
-		pcProj = c * R * pwi + t;
-		
-		error += MathTools::diffSquareNorm(pc[i], cv::Vec3d(pcProj));
+		error += MathTools::diffSquareNorm(pc[i], getPointCameraCoords(pw[i]));
 	}
 
 	return error / 4;
+}
+
+cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
+{
+	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
+
+	pointW.at<double>(0, 0) = point[0];
+	pointW.at<double>(1, 0) = point[1];
+	pointW.at<double>(2, 0) = point[2];
+
+	pointC = c * R * pointW + t;
+
+	return cv::Vec3d(pointC);
+}
+
+cv::Vec3d PnPSolver::getPointWorldCoords(cv::Vec3d point) const
+{
+	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
+
+	pointC.at<double>(0, 0) = point[0];
+	pointC.at<double>(1, 0) = point[1];
+	pointC.at<double>(2, 0) = point[2];
+
+	pointW = R_inv * (pointC - t) / c;
+
+	return cv::Vec3d(pointW);
+}
+
+glm::vec3 PnPSolver::worldToOpenGLCoords(cv::Vec3d point) const
+{
+	return glm::vec3(point[2], -point[1], -point[0]);
 }

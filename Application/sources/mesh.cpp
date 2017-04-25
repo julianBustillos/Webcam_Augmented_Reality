@@ -1,6 +1,36 @@
 #include "..\include\mesh.h"
 
-Mesh::Mesh(std::string path)
+Mesh::Mesh()
+{
+	readMesh();
+	findBoundingBox();
+}
+
+Mesh::~Mesh()
+{
+}
+
+const std::vector<Vertex>& Mesh::getVertices()
+{
+	return vertices;
+}
+
+const std::vector<Triangle>& Mesh::getIndices()
+{
+	return indices;
+}
+
+int Mesh::getNbIndices() const
+{
+	return 3 * (int)indices.size();
+}
+
+glm::vec3 Mesh::getLightPosition()
+{
+	return max + 0.5f * (max - min);
+}
+
+void Mesh::readMesh()
 {
 	vertices.clear();
 	indices.clear();
@@ -8,7 +38,7 @@ Mesh::Mesh(std::string path)
 	//DEBUG
 	Vertex vertex;
 	Triangle triangle;
-	float size = 0.5f;
+	float size = 10.0f;
 
 	vertex.normal = glm::vec3(0.0f, -1.0f, 0.0f);
 	vertex.position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -119,21 +149,23 @@ Mesh::Mesh(std::string path)
 	indices.push_back(triangle);
 }
 
-Mesh::~Mesh()
+void Mesh::findBoundingBox()
 {
-}
+	if (vertices.empty()) {
+		return;
+	}
 
-const std::vector<Vertex>& Mesh::getVertices()
-{
-	return vertices;
-}
+	min = vertices[0].position;
+	max = vertices[0].position;
 
-const std::vector<Triangle>& Mesh::getIndices()
-{
-	return indices;
-}
-
-int Mesh::getNbIndices() const
-{
-	return 3 * (int)indices.size();
+	for (int ivtx = 1; ivtx < vertices.size(); ivtx++) {
+		for (int idim = 0; idim < 3; idim++) {
+			if (vertices[ivtx].position[idim] < min[idim]) {
+				min[idim] = vertices[ivtx].position[idim];
+			}
+			else if (vertices[ivtx].position[idim] > max[idim]) {
+				max[idim] = vertices[ivtx].position[idim];
+			}
+		}
+	}
 }

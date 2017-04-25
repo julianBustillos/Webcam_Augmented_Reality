@@ -8,7 +8,7 @@
 
 
 GLManager::GLManager(cv::Mat & frame) :
-	window(nullptr), frameShader(nullptr), mesh(GET(MESH_PATH)), meshShader(nullptr),
+	window(nullptr), frameShader(nullptr), meshShader(nullptr),
 	width(frame.size().width), height(frame.size().height)
 {
 	initContext();
@@ -55,58 +55,15 @@ void GLManager::swapBuffers() const
 	glfwSwapBuffers(window);
 }
 
-void GLManager::draw(const cv::Mat & frame) const
+void GLManager::draw(const cv::Mat & frame, const PnPSolver *pnp) const
 {
 	// Clear the color buffer and the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-	// FRAME
-	glDisable(GL_DEPTH_TEST);
-
-	// Bind Texture
-	glBindTexture(GL_TEXTURE_2D, frameTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size().width, frame.size().height, 0, GL_BGR, GL_UNSIGNED_BYTE, frame.data);
-
-	// Activate shader
-	frameShader->use();
-
-	// Draw container
-	glBindVertexArray(frameVAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-
-	// MESH
-	glEnable(GL_DEPTH_TEST);
-
-	//Activate shader
-	meshShader->use();
-
-	// Create camera transformations
-	glm::vec3 cameraPos = glm::vec3(0.5f, 0.8f, 3.0f);
-	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-	glm::mat4 model;
-
-	// Set uniform values
-	glUniform3f(lightPosLoc, 1.0f, 1.0f, 1.0f);
-	glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-	// Draw the container
-	glBindVertexArray(meshVAO);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glBindVertexArray(0);
+	drawFrame(frame);
+	if (pnp) {
+		drawMesh(pnp);
+	}
 }
 
 void GLManager::initContext()
@@ -256,9 +213,64 @@ void GLManager::initUniform()
 {
 	meshShader->use();
 
-	lightPosLoc = glGetUniformLocation(meshShader->getProgramId(), "lightPos");
+
+	GLint lightPosLoc = glGetUniformLocation(meshShader->getProgramId(), "lightPos");
+	glm::vec3 lightPosition = mesh.getLightPosition();
+	glUniform3f(lightPosLoc, lightPosition.x, lightPosition.y, lightPosition.z);
+
+	GLint projLoc = glGetUniformLocation(meshShader->getProgramId(), "projection");
+	GLint modelLoc = glGetUniformLocation(meshShader->getProgramId(), "model");
+	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+	glm::mat4 model;
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+
 	viewPosLoc = glGetUniformLocation(meshShader->getProgramId(), "viewPos");
-	modelLoc = glGetUniformLocation(meshShader->getProgramId(), "model");
 	viewLoc = glGetUniformLocation(meshShader->getProgramId(), "view");
-	projLoc = glGetUniformLocation(meshShader->getProgramId(), "projection");
+}
+
+void GLManager::drawFrame(const cv::Mat & frame) const
+{
+	glDisable(GL_DEPTH_TEST);
+
+	// Bind Texture
+	glBindTexture(GL_TEXTURE_2D, frameTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size().width, frame.size().height, 0, GL_BGR, GL_UNSIGNED_BYTE, frame.data);
+
+	// Activate shader
+	frameShader->use();
+
+	// Draw container
+	glBindVertexArray(frameVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void GLManager::drawMesh(const PnPSolver *pnp) const
+{
+	glEnable(GL_DEPTH_TEST);
+
+	//Activate shader
+	meshShader->use();
+
+	// Create camera transformations
+	glm::vec3 cameraPosition = pnp->getCameraPosition();
+	glm::vec3 cameraFront = pnp->getCameraFront();
+	glm::vec3 cameraUp = pnp->getCameraUp();
+	glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+
+	// Set uniform values
+	glUniform3f(viewPosLoc, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+	// Draw the container
+	glBindVertexArray(meshVAO);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glBindVertexArray(0);
 }

@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <glm/glm.hpp>
 
 
 class PnPSolver {
@@ -9,8 +10,9 @@ public:
 	PnPSolver(int width, int height);
 	~PnPSolver();
 	void solve(std::vector<cv::Vec2i> corners);
-	cv::Vec3d getPointCameraCoords(cv::Vec3d point) const;
-	cv::Vec3d getPointWorldCoords(cv::Vec3d point) const;
+	glm::vec3 getCameraPosition() const;
+	glm::vec3 getCameraFront() const;
+	glm::vec3 getCameraUp() const;
 
 private:
 	void computeFocalLength();
@@ -22,6 +24,9 @@ private:
 	void computePC();
 	void estimateTransformation();
 	double getMeanReprojectionError() const;
+	cv::Vec3d getPointCameraCoords(cv::Vec3d point) const;
+	cv::Vec3d getPointWorldCoords(cv::Vec3d point) const;
+	glm::vec3 worldToOpenGLCoords(cv::Vec3d point) const;
 
 	//DATA
 	double f[2];

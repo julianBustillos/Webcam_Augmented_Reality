@@ -5,6 +5,7 @@
 #include "shader.h"
 #include <opencv2/opencv.hpp>
 #include "mesh.h"
+#include "PnPSolver.h"
 
 
 class GLManager {
@@ -14,7 +15,7 @@ public:
 	void event() const;
 	bool running() const;
 	void swapBuffers() const;
-	void draw(const cv::Mat & frame) const;
+	void draw(const cv::Mat & frame, const PnPSolver *pnp) const;
 
 private:
 	void initContext();
@@ -23,6 +24,8 @@ private:
 	void initTexture(const cv::Mat & frame);
 	void initMesh();
 	void initUniform();
+	void drawFrame(const cv::Mat & frame) const;
+	void drawMesh(const PnPSolver *pnp) const;
 
 	// DATA
 	int width;
@@ -41,9 +44,6 @@ private:
 	GLuint meshVBO;
 	GLuint meshEBO;
 
-	GLint lightPosLoc;
 	GLint viewPosLoc;
-	GLint modelLoc;
 	GLint viewLoc;
-	GLint projLoc;
 };
