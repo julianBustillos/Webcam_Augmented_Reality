@@ -195,8 +195,8 @@ cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) cons
 int MarkerRecognizer::getColor(const cv::Mat & frame, int i, int j) const
 {
 	float grayVal = 0.0f;
-	for (float x = j + 2.2f; x < j + 3.0f; x += 0.2f) {
-		for (float y = i + 2.2f; y < i + 3.0f; y += 0.2f) {
+	for (float y = j + 2.2f; y < j + 3.0f; y += 0.2f) {
+		for (float x = i + 2.2f; x < i + 3.0f; x += 0.2f) {
 			grayVal += MathTools::grayScaleValue(frame, getFrameCoordinates(x, y));
 		}
 	}
