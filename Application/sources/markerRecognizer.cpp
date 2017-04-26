@@ -284,24 +284,24 @@ void MarkerRecognizer::computeDirectionTriangle()
 
 	switch (currentDir) {
 	case Direction::UP:
-		triangle.push_back(getFrameCoordinates(5.0f, 3.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
-		break;
-	case Direction::LEFT:
 		triangle.push_back(getFrameCoordinates(3.0f, 5.0f));
 		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
 		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
 		break;
-	case Direction::DOWN:
-		triangle.push_back(getFrameCoordinates(5.0f, 7.0f));
-		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
-		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
+	case Direction::LEFT:
+		triangle.push_back(getFrameCoordinates(5.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
 		break;
-	case Direction::RIGHT:
+	case Direction::DOWN:
 		triangle.push_back(getFrameCoordinates(7.0f, 5.0f));
 		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
 		triangle.push_back(getFrameCoordinates(3.0f, 7.0f));
+		break;
+	case Direction::RIGHT:
+		triangle.push_back(getFrameCoordinates(5.0f, 7.0f));
+		triangle.push_back(getFrameCoordinates(3.0f, 3.0f));
+		triangle.push_back(getFrameCoordinates(7.0f, 3.0f));
 		break;
 	default:
 		break;
