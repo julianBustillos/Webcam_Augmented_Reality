@@ -11,8 +11,8 @@ public:
 	~PnPSolver();
 	void solve(std::vector<cv::Vec2i> corners);
 	glm::vec3 getCameraPosition() const;
-	glm::vec3 getCameraFront() const;
-	glm::vec3 getCameraUp() const;
+	glm::vec3 getCameraFront(const glm::vec3 & cameraPositionW) const;
+	glm::vec3 getCameraUp(const glm::vec3 & cameraPositionW) const;
 
 private:
 	void computeFocalLength();

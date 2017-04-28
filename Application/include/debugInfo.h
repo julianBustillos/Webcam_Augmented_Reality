@@ -36,6 +36,7 @@ public:
 	void printOnFrame(cv::Mat & frame, double time, const CornerDetector & detector, const MarkerRecognizer & recognizer);
 	void parametersWindow();
 	bool isPaused() const;
+	bool showMesh() const;
 
 private:
 	void updateFPS(double time);

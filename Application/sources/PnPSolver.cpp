@@ -10,9 +10,9 @@ PnPSolver::PnPSolver(int width, int height)
 	uc[1] = width / 2
 		;
 	pw[0] = cv::Vec3d (0.,  0.,  0.);
-	pw[1] = cv::Vec3d(10.,  0.,  0.);
-	pw[2] = cv::Vec3d(10.,  0., 10.);
-	pw[3] = cv::Vec3d( 0.,  0., 10.);
+	pw[1] = cv::Vec3d(-10.,  0.,  0.);
+	pw[2] = cv::Vec3d(-10.,  0., -10.);
+	pw[3] = cv::Vec3d( 0.,  0., -10.);
 
 	M = cv::Mat::zeros(8, 9, CV_64F);
 	vDist = cv::Mat::zeros(3, 1, CV_64F);
@@ -34,6 +34,7 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 {
 	for (int idx = 0; idx < 4; idx++) {
 			u[idx] = corners[idx];
+			std::cout << corners[idx] << std::endl;
 	}
 
 	fillM();
@@ -52,22 +53,24 @@ glm::vec3 PnPSolver::getCameraPosition() const
 	return worldToOpenGLCoords(cameraPositionW);
 }
 
-glm::vec3 PnPSolver::getCameraFront() const
+glm::vec3 PnPSolver::getCameraFront(const glm::vec3 & cameraPositionW) const
 {
-	cv::Vec3d cameraFrontC = cv::Vec3d(0.0f, 0.0f, -1.0f);
+	cv::Vec3d cameraFrontC = cv::Vec3d(0.0f, 0.0f, 1.0f);
 	cv::Vec3d cameraFrontW = getPointWorldCoords(cameraFrontC);
+	glm::vec3 cameraFrontRes = glm::normalize(worldToOpenGLCoords(cameraFrontW) - cameraPositionW);
 
-	std::cout << "FRONT    : " << cameraFrontW << std::endl;
-	return glm::vec3(0.0f, -1.0f, 0.0f);
+	std::cout << "FRONT    : " << cv::Vec3d(cameraFrontRes.x, cameraFrontRes.y, cameraFrontRes.z) << std::endl;
+	return cameraFrontRes;
 }
 
-glm::vec3 PnPSolver::getCameraUp() const
+glm::vec3 PnPSolver::getCameraUp(const glm::vec3 & cameraPositionW) const
 {
-	cv::Vec3d cameraUpC = cv::Vec3d(0.0f, 1.0f, 0.0f);
+	cv::Vec3d cameraUpC = cv::Vec3d(-1.0f, 0.0f, 0.0f);
 	cv::Vec3d cameraUpW = getPointWorldCoords(cameraUpC);
+	glm::vec3 cameraUpRes = glm::normalize(worldToOpenGLCoords(cameraUpW) - cameraPositionW);
 
-	std::cout << "UP       : " << cameraUpW << std::endl;
-	return glm::vec3(0.0f, 0.0f, -1.0f);
+	std::cout << "UP       : " << cv::Vec3d(cameraUpRes.x, cameraUpRes.y, cameraUpRes.z) << std::endl;
+	return cameraUpRes;
 }
 
 void PnPSolver::computeFocalLength()
@@ -277,5 +280,5 @@ cv::Vec3d PnPSolver::getPointWorldCoords(cv::Vec3d point) const
 
 glm::vec3 PnPSolver::worldToOpenGLCoords(cv::Vec3d point) const
 {
-	return glm::vec3(point[2], -point[1], -point[0]);
+	return -glm::vec3(point[0], point[1], point[2]);
 }

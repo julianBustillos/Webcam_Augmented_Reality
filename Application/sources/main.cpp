@@ -44,8 +44,11 @@ int main(int argc, char *argv[])
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		double time = std::chrono::duration<double>(end - start).count();
 		info.printOnFrame(webcam.getFrame(), time, detector, recognizer);
-#endif
+
+		if (recognizer.identified() && info.showMesh()) {
+#else
 		if (recognizer.identified()) {
+#endif
 			glManager.draw(webcam.getFrame(), &pnp);
 		}
 		else {

@@ -117,6 +117,11 @@ bool DebugInfo::isPaused() const
 	return pause == Active::ENABLED;
 }
 
+bool DebugInfo::showMesh() const
+{
+	return (mode == Mode::NORMAL);
+}
+
 void DebugInfo::updateFPS(double time)
 {
 	end = std::chrono::steady_clock::now();

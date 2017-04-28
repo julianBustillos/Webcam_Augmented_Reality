@@ -258,8 +258,8 @@ void GLManager::drawMesh(const PnPSolver *pnp) const
 
 	// Create camera transformations
 	glm::vec3 cameraPosition = pnp->getCameraPosition();
-	glm::vec3 cameraFront = pnp->getCameraFront();
-	glm::vec3 cameraUp = pnp->getCameraUp();
+	glm::vec3 cameraFront = pnp->getCameraFront(cameraPosition);
+	glm::vec3 cameraUp = pnp->getCameraUp(cameraPosition);
 	glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
 
 	// Set uniform values
