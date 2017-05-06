@@ -57,5 +57,5 @@ public:
 	DECLARE(int, ROI_MARGIN);
 
 	// PnP SOLVER PARAMETERS
-	DECLARE(int, DFOV);
+	DECLARE(int, HFOV);
 };

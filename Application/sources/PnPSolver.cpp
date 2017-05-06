@@ -75,7 +75,7 @@ glm::vec3 PnPSolver::getCameraUp(const glm::vec3 & cameraPositionW) const
 
 void PnPSolver::computeFocalLength()
 {
-	f[0] = f[1] = sqrt(uc[0] * uc[0] + uc[1] * uc[1]) / tan(GET(DFOV) * M_PI / 360);
+	f[0] = f[1] = uc[1] / tan(GET(HFOV) * M_PI / 360);
 }
 
 void PnPSolver::computeControlPoints()
