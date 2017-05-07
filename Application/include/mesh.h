@@ -21,15 +21,11 @@ public:
 	const std::vector<Vertex> & getVertices();
 	const std::vector<Triangle> & getIndices();
 	int getNbIndices() const;
-	glm::vec3 getLightPosition();
 
 private:
 	void readMesh();
-	void findBoundingBox();
 
 	//DATA
 	std::vector<Vertex> vertices;
 	std::vector<Triangle> indices;
-	glm::vec3 min;
-	glm::vec3 max;
 };

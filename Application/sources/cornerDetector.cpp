@@ -22,8 +22,6 @@ CornerDetector::CornerDetector(int width, int height)
 	for (int i = 0; i < regionGrid.size(); i++) {
 		regionGrid[i].resize(regionNumber[1]);
 	}
-
-	std::cout << "Region grid size : " << regionNumber[0] << "*" << regionNumber[1] << std::endl;
 }
 
 CornerDetector::~CornerDetector()

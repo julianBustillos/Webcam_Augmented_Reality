@@ -3,7 +3,6 @@
 Mesh::Mesh()
 {
 	readMesh();
-	findBoundingBox();
 }
 
 Mesh::~Mesh()
@@ -25,11 +24,6 @@ int Mesh::getNbIndices() const
 	return 3 * (int)indices.size();
 }
 
-glm::vec3 Mesh::getLightPosition()
-{
-	return max + 0.5f * (max - min);
-}
-
 void Mesh::readMesh()
 {
 	vertices.clear();
@@ -38,16 +32,17 @@ void Mesh::readMesh()
 	//DEBUG
 	Vertex vertex;
 	Triangle triangle;
-	float size = 10.0f;
+	float init = 2.0f;
+	float size = 6.0f;
 
 	vertex.normal = glm::vec3(0.0f, -1.0f, 0.0f);
-	vertex.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init + size, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, 0.0f, size);
+	vertex.position = glm::vec3(init + size, 0.0f, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, 0.0f, size);
+	vertex.position = glm::vec3(init, 0.0f, init + size);
 	vertices.push_back(vertex);
 	triangle.index[0] = 0;
 	triangle.index[1] = 1;
@@ -59,13 +54,13 @@ void Mesh::readMesh()
 	indices.push_back(triangle);
 
 	vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-	vertex.position = glm::vec3(0.0f, size, 0.0f);
+	vertex.position = glm::vec3(init, size, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, 0.0f);
+	vertex.position = glm::vec3(init + size, size, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, size);
+	vertex.position = glm::vec3(init + size, size, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, size, size);
+	vertex.position = glm::vec3(init, size, init + size);
 	vertices.push_back(vertex);
 	triangle.index[0] = 4;
 	triangle.index[1] = 5;
@@ -77,13 +72,13 @@ void Mesh::readMesh()
 	indices.push_back(triangle);
 
 	vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
-	vertex.position = glm::vec3(0.0f, 0.0f, size);
+	vertex.position = glm::vec3(init, 0.0f, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, 0.0f, size);
+	vertex.position = glm::vec3(init + size, 0.0f, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, size);
+	vertex.position = glm::vec3(init + size, size, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, size, size);
+	vertex.position = glm::vec3(init, size, init + size);
 	vertices.push_back(vertex);
 	triangle.index[0] = 8;
 	triangle.index[1] = 9;
@@ -95,13 +90,13 @@ void Mesh::readMesh()
 	indices.push_back(triangle);
 
 	vertex.normal = glm::vec3(0.0f, 0.0f, -1.0f);
-	vertex.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init + size, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, 0.0f);
+	vertex.position = glm::vec3(init + size, size, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, size, 0.0f);
+	vertex.position = glm::vec3(init, size, init);
 	vertices.push_back(vertex);
 	triangle.index[0] = 12;
 	triangle.index[1] = 13;
@@ -113,13 +108,13 @@ void Mesh::readMesh()
 	indices.push_back(triangle);
 
 	vertex.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
-	vertex.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, size, 0.0f);
+	vertex.position = glm::vec3(init, size, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, size, size);
+	vertex.position = glm::vec3(init, size, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(0.0f, 0.0f, size);
+	vertex.position = glm::vec3(init, 0.0f, init + size);
 	vertices.push_back(vertex);
 	triangle.index[0] = 16;
 	triangle.index[1] = 17;
@@ -131,13 +126,13 @@ void Mesh::readMesh()
 	indices.push_back(triangle);
 
 	vertex.normal = glm::vec3(1.0f, 0.0f, 0.0f);
-	vertex.position = glm::vec3(size, 0.0f, 0.0f);
+	vertex.position = glm::vec3(init + size, 0.0f, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, 0.0f);
+	vertex.position = glm::vec3(init + size, size, init);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, size, size);
+	vertex.position = glm::vec3(init + size, size, init + size);
 	vertices.push_back(vertex);
-	vertex.position = glm::vec3(size, 0.0f, size);
+	vertex.position = glm::vec3(init + size, 0.0f, init + size);
 	vertices.push_back(vertex);
 	triangle.index[0] = 23;
 	triangle.index[1] = 20;
@@ -147,25 +142,4 @@ void Mesh::readMesh()
 	triangle.index[1] = 21;
 	triangle.index[2] = 22;
 	indices.push_back(triangle);
-}
-
-void Mesh::findBoundingBox()
-{
-	if (vertices.empty()) {
-		return;
-	}
-
-	min = vertices[0].position;
-	max = vertices[0].position;
-
-	for (int ivtx = 1; ivtx < vertices.size(); ivtx++) {
-		for (int idim = 0; idim < 3; idim++) {
-			if (vertices[ivtx].position[idim] < min[idim]) {
-				min[idim] = vertices[ivtx].position[idim];
-			}
-			else if (vertices[ivtx].position[idim] > max[idim]) {
-				max[idim] = vertices[ivtx].position[idim];
-			}
-		}
-	}
 }

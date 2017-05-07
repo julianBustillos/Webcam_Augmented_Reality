@@ -34,7 +34,6 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 {
 	for (int idx = 0; idx < 4; idx++) {
 			u[idx] = corners[idx];
-			std::cout << corners[idx] << std::endl;
 	}
 
 	fillM();
@@ -42,6 +41,31 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners)
 	computeBeta();
 	computePC();
 	estimateTransformation();
+
+	//DEBUG
+	cv::Mat PW = cv::Mat::zeros(4, 3, CV_32F);
+	cv::Mat U = cv::Mat::zeros(4, 2, CV_32F);
+	for (int i = 0; i < 4; i++) {
+		PW.at<float>(i, 0) = (float)pw[i][0];
+		PW.at<float>(i, 1) = (float)pw[i][1];
+		PW.at<float>(i, 2) = (float)pw[i][2];
+		U.at<float>(i, 0) = (float)u[i][0];
+		U.at<float>(i, 1) = (float)u[i][1];
+	}
+	cv::Mat A = cv::Mat::zeros(3, 3, CV_32F);
+	A.at<float>(0, 0) = (float)f[0];
+	A.at<float>(1, 1) = (float)f[1];
+	A.at<float>(0, 2) = (float)uc[0];
+	A.at<float>(1, 2) = (float)uc[1];
+	A.at<float>(2, 2) = 1.0f;
+
+	cv::Mat rvec = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat tvec = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat dist = cv::Mat::zeros(8, 1, CV_64F);
+	cv::solvePnP(PW, U, A, dist, rvec, tvec);
+	cv::Rodrigues(rvec, R);
+	R_inv = R.inv();
+	t = tvec;
 }
 
 glm::vec3 PnPSolver::getCameraPosition() const
@@ -49,7 +73,6 @@ glm::vec3 PnPSolver::getCameraPosition() const
 	cv::Vec3d cameraPositionC = cv::Vec3d(0.0f, 0.0f, 0.0f);
 	cv::Vec3d cameraPositionW = getPointWorldCoords(cameraPositionC);
 
-	std::cout << "POSITION : " << cameraPositionW << std::endl;
 	return worldToOpenGLCoords(cameraPositionW);
 }
 
@@ -59,7 +82,6 @@ glm::vec3 PnPSolver::getCameraFront(const glm::vec3 & cameraPositionW) const
 	cv::Vec3d cameraFrontW = getPointWorldCoords(cameraFrontC);
 	glm::vec3 cameraFrontRes = glm::normalize(worldToOpenGLCoords(cameraFrontW) - cameraPositionW);
 
-	std::cout << "FRONT    : " << cv::Vec3d(cameraFrontRes.x, cameraFrontRes.y, cameraFrontRes.z) << std::endl;
 	return cameraFrontRes;
 }
 
@@ -69,7 +91,6 @@ glm::vec3 PnPSolver::getCameraUp(const glm::vec3 & cameraPositionW) const
 	cv::Vec3d cameraUpW = getPointWorldCoords(cameraUpC);
 	glm::vec3 cameraUpRes = glm::normalize(worldToOpenGLCoords(cameraUpW) - cameraPositionW);
 
-	std::cout << "UP       : " << cv::Vec3d(cameraUpRes.x, cameraUpRes.y, cameraUpRes.z) << std::endl;
 	return cameraUpRes;
 }
 

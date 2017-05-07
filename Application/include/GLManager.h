@@ -15,7 +15,7 @@ public:
 	void event() const;
 	bool running() const;
 	void swapBuffers() const;
-	void draw(const cv::Mat & frame, const PnPSolver *pnp) const;
+	void draw(const cv::Mat & frame, const PnPSolver *pnp);
 
 private:
 	void initContext();
@@ -25,7 +25,9 @@ private:
 	void initMesh();
 	void initUniform();
 	void drawFrame(const cv::Mat & frame) const;
-	void drawMesh(const PnPSolver *pnp) const;
+	void drawMesh(const PnPSolver *pnp);
+	void getCameraVectors(const PnPSolver *pnp);
+	void computeLightPosition();
 
 	// DATA
 	int width;
@@ -44,6 +46,12 @@ private:
 	GLuint meshVBO;
 	GLuint meshEBO;
 
+	GLint lightPosLoc;
 	GLint viewPosLoc;
 	GLint viewLoc;
+
+	glm::vec3 cameraPosition;
+	glm::vec3 cameraFront;
+	glm::vec3 cameraUp;
+	glm::vec3 lightPosition;
 };
