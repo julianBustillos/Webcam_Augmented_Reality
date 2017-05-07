@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Application\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARTag_Generator", "ARTag_Generator\ARTag_Generator.vcxproj", "{1D58B766-105E-4A37-BA63-BAFA49A53BEA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Calibration", "Calibration\Calibration.vcxproj", "{35B83E8C-5F85-4EE8-A693-C45436AF8424}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,14 +31,6 @@ Global
 		{1D58B766-105E-4A37-BA63-BAFA49A53BEA}.Release|x64.Build.0 = Release|x64
 		{1D58B766-105E-4A37-BA63-BAFA49A53BEA}.Release|x86.ActiveCfg = Release|Win32
 		{1D58B766-105E-4A37-BA63-BAFA49A53BEA}.Release|x86.Build.0 = Release|Win32
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Debug|x64.ActiveCfg = Debug|x64
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Debug|x64.Build.0 = Debug|x64
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Debug|x86.ActiveCfg = Debug|Win32
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Debug|x86.Build.0 = Debug|Win32
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Release|x64.ActiveCfg = Release|x64
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Release|x64.Build.0 = Release|x64
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Release|x86.ActiveCfg = Release|Win32
-		{35B83E8C-5F85-4EE8-A693-C45436AF8424}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
