@@ -137,6 +137,32 @@ double MathTools::trace3x1(const cv::Mat & mat)
 	return trace;
 }
 
+double MathTools::squareNorm(const cv::Mat & vec, int size)
+{
+	double res = 0.;
+
+	for (int k = 0; k < size; k++) {
+		res += vec.at<double>(k, 0) * vec.at<double>(k, 0);
+	}
+
+	return res;
+}
+
+double MathTools::infNorm(const cv::Mat & vec, int size)
+{
+	double max = 0.;
+	double tmp;
+
+	for (int k = 0; k < size; k++) {
+		tmp = abs(vec.at<double>(k, 0));
+		if (tmp > max) {
+			max = tmp;
+		}
+	}
+
+	return tmp;
+}
+
 float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
 {
 	float y = (float)lp2[0] - (float)lp1[0];

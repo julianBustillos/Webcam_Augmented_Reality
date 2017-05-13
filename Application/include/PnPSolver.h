@@ -9,10 +9,11 @@ class PnPSolver {
 public:
 	PnPSolver(int width, int height);
 	~PnPSolver();
-	void solve(std::vector<cv::Vec2i> corners);
-	glm::vec3 getCameraPosition() const;
-	glm::vec3 getCameraFront(const glm::vec3 & cameraPositionW) const;
-	glm::vec3 getCameraUp(const glm::vec3 & cameraPositionW) const;
+	void solve(std::vector<cv::Vec2i> corners, bool identified);
+	glm::vec3 getCameraPosition();
+	glm::vec3 getCameraFront() const;
+	glm::vec3 getCameraUp() const;
+	bool wasSolvedLastFrame() const;
 
 private:
 	void computeFocalLength();
@@ -29,8 +30,11 @@ private:
 	glm::vec3 worldToOpenGLCoords(cv::Vec3d point) const;
 
 	//DATA
-	double f[2];
-	int uc[2];
+	bool firstFrameSolve;
+	bool solvedLastFrame;
+	glm::vec3 cameraPositionWLast;
+
+	cv::Mat A;
 	cv::Vec3d pw[4];
 	cv::Vec3d pc[4];
 	cv::Vec3d cw[3];

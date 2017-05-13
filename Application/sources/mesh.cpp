@@ -1,8 +1,13 @@
-#include "..\include\mesh.h"
+#include "mesh.h"
+#include "constants.h"
+#include <fstream>
+#include <iostream>
 
-Mesh::Mesh()
+
+Mesh::Mesh(std::string filename) :
+	firstTime(true)
 {
-	readMesh();
+	readMesh(filename);
 }
 
 Mesh::~Mesh()
@@ -24,122 +29,120 @@ int Mesh::getNbIndices() const
 	return 3 * (int)indices.size();
 }
 
-void Mesh::readMesh()
+void Mesh::computeTime()
+{
+	if (keyframes.size() == 1) {
+		currentKey = 0;
+		interpolation = 0.0f;
+		return;
+	}
+
+	float elapsedTime;
+	if (firstTime) {
+		start = std::chrono::steady_clock::now();
+		currentKey = 0;
+		elapsedTime = 0.0f;
+		firstTime = false;
+	}
+	else {
+		std::chrono::steady_clock::time_point actualTime = std::chrono::steady_clock::now();
+		elapsedTime = std::chrono::duration<float>(actualTime - start).count();
+		elapsedTime = fmod(elapsedTime, keyframes[keyframes.size() - 1].time);
+		while (!(keyframes[currentKey].time <= elapsedTime && elapsedTime < keyframes[(currentKey + 1) % keyframes.size()].time)) {
+			currentKey = (currentKey + 1) % (keyframes.size() - 1);
+		}
+	}
+
+	interpolation = (elapsedTime - keyframes[currentKey].time) / (keyframes[(currentKey + 1) % keyframes.size()].time - keyframes[currentKey].time);
+}
+
+glm::vec3 Mesh::getScale() const
+{
+	return (1 - interpolation) * keyframes[currentKey].scale + interpolation * keyframes[(currentKey + 1) % keyframes.size()].scale;
+}
+
+glm::vec3 Mesh::getRotation() const
+{
+	return (1 - interpolation) * keyframes[currentKey].rotation + interpolation * keyframes[(currentKey + 1) % keyframes.size()].rotation;
+}
+
+glm::vec3 Mesh::getTranslation() const
+{
+	return (1 - interpolation) * keyframes[currentKey].translation + interpolation * keyframes[(currentKey + 1) % keyframes.size()].translation;
+}
+
+void Mesh::readMesh(std::string filename)
 {
 	vertices.clear();
 	indices.clear();
+	keyframes.clear();
 
-	//DEBUG
-	Vertex vertex;
-	Triangle triangle;
-	float init = 2.0f;
-	float size = 6.0f;
+	std::ifstream meshFile(GET(MESH_PATH) + filename);
+	if (meshFile.is_open()) {
+		Vertex vertex;
+		Triangle triangle;
+		Keyframe keyframe;
+		std::string identifier;
+		int currentNormal = -1;
+		int currentColor = -1;
 
-	vertex.normal = glm::vec3(0.0f, -1.0f, 0.0f);
-	vertex.position = glm::vec3(init, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, 0.0f, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, 0.0f, init + size);
-	vertices.push_back(vertex);
-	triangle.index[0] = 0;
-	triangle.index[1] = 1;
-	triangle.index[2] = 2;
-	indices.push_back(triangle);
-	triangle.index[0] = 0;
-	triangle.index[1] = 2;
-	triangle.index[2] = 3;
-	indices.push_back(triangle);
+		while (meshFile >> identifier) {
+			if (identifier == "v") {
+				meshFile >> vertex.position.x;
+				meshFile >> vertex.position.y;
+				meshFile >> vertex.position.z;
+				vertices.push_back(vertex);
+			}
 
-	vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-	vertex.position = glm::vec3(init, size, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, size, init + size);
-	vertices.push_back(vertex);
-	triangle.index[0] = 4;
-	triangle.index[1] = 5;
-	triangle.index[2] = 6;
-	indices.push_back(triangle);
-	triangle.index[0] = 4;
-	triangle.index[1] = 6;
-	triangle.index[2] = 7;
-	indices.push_back(triangle);
+			if (identifier == "vn") {
+				currentNormal++;
+				meshFile >> vertices[currentNormal].normal.x;
+				meshFile >> vertices[currentNormal].normal.y;
+				meshFile >> vertices[currentNormal].normal.z;
+			}
 
-	vertex.normal = glm::vec3(0.0f, 0.0f, 1.0f);
-	vertex.position = glm::vec3(init, 0.0f, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, 0.0f, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, size, init + size);
-	vertices.push_back(vertex);
-	triangle.index[0] = 8;
-	triangle.index[1] = 9;
-	triangle.index[2] = 10;
-	indices.push_back(triangle);
-	triangle.index[0] = 8;
-	triangle.index[1] = 10;
-	triangle.index[2] = 11;
-	indices.push_back(triangle);
+			if (identifier == "vc") {
+				currentColor++;
+				meshFile >> vertices[currentColor].color.x;
+				meshFile >> vertices[currentColor].color.y;
+				meshFile >> vertices[currentColor].color.z;
+				meshFile >> vertices[currentColor].color.w;
+			}
 
-	vertex.normal = glm::vec3(0.0f, 0.0f, -1.0f);
-	vertex.position = glm::vec3(init, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, size, init);
-	vertices.push_back(vertex);
-	triangle.index[0] = 12;
-	triangle.index[1] = 13;
-	triangle.index[2] = 15;
-	indices.push_back(triangle);
-	triangle.index[0] = 13;
-	triangle.index[1] = 14;
-	triangle.index[2] = 15;
-	indices.push_back(triangle);
+			if (identifier == "f") {
+				meshFile >> triangle.index[0];
+				meshFile >> triangle.index[1];
+				meshFile >> triangle.index[2];
+				indices.push_back(triangle);
+			}
 
-	vertex.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
-	vertex.position = glm::vec3(init, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, size, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, size, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init, 0.0f, init + size);
-	vertices.push_back(vertex);
-	triangle.index[0] = 16;
-	triangle.index[1] = 17;
-	triangle.index[2] = 18;
-	indices.push_back(triangle);
-	triangle.index[0] = 16;
-	triangle.index[1] = 18;
-	triangle.index[2] = 19;
-	indices.push_back(triangle);
+			if (identifier == "kf") {
+				meshFile >> keyframe.time;
+				keyframes.push_back(keyframe);
+			}
 
-	vertex.normal = glm::vec3(1.0f, 0.0f, 0.0f);
-	vertex.position = glm::vec3(init + size, 0.0f, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, size, init + size);
-	vertices.push_back(vertex);
-	vertex.position = glm::vec3(init + size, 0.0f, init + size);
-	vertices.push_back(vertex);
-	triangle.index[0] = 23;
-	triangle.index[1] = 20;
-	triangle.index[2] = 22;
-	indices.push_back(triangle);
-	triangle.index[0] = 20;
-	triangle.index[1] = 21;
-	triangle.index[2] = 22;
-	indices.push_back(triangle);
+			if (identifier == "s") {
+				meshFile >> keyframes[keyframes.size() - 1].scale.x;
+				meshFile >> keyframes[keyframes.size() - 1].scale.y;
+				meshFile >> keyframes[keyframes.size() - 1].scale.z;
+			}
+			if (identifier == "r") {
+				meshFile >> keyframes[keyframes.size() - 1].rotation.x;
+				meshFile >> keyframes[keyframes.size() - 1].rotation.y;
+				meshFile >> keyframes[keyframes.size() - 1].rotation.z;
+				keyframes[keyframes.size() - 1].rotation *= - M_PI / 180.0f;
+			}
+			if (identifier == "t") {
+				meshFile >> keyframes[keyframes.size() - 1].translation.x;
+				meshFile >> keyframes[keyframes.size() - 1].translation.y;
+				meshFile >> keyframes[keyframes.size() - 1].translation.z;
+			}
+		}
+
+		meshFile.close();
+	}
+	else {
+		std::cerr << "Error : could not open " << GET(MESH_PATH) + filename << std::endl;
+	}
+
 }

@@ -15,18 +15,18 @@ public:
 	void event() const;
 	bool running() const;
 	void swapBuffers() const;
-	void draw(const cv::Mat & frame, const PnPSolver *pnp);
+	void draw(const cv::Mat & frame, PnPSolver *pnp);
 
 private:
 	void initContext();
 	void initShaders();
 	void initFrameQuad();
 	void initTexture(const cv::Mat & frame);
-	void initMesh();
-	void initUniform();
+	void initMeshes();
+	void initUniforms();
 	void drawFrame(const cv::Mat & frame) const;
-	void drawMesh(const PnPSolver *pnp);
-	void getCameraVectors(const PnPSolver *pnp);
+	void drawMeshes( PnPSolver *pnp);
+	void getCameraVectors(PnPSolver *pnp);
 	void computeLightPosition();
 
 	// DATA
@@ -40,15 +40,18 @@ private:
 	GLuint frameEBO;
 	GLuint frameTexture;
 
-	Mesh mesh;
-	Shader *meshShader;
-	GLuint meshVAO;
-	GLuint meshVBO;
-	GLuint meshEBO;
+	std::vector<Mesh *> meshes;
+	std::vector<Shader *> meshShaders;
+	std::vector<GLuint> meshVAO;
+	std::vector<GLuint> meshVBO;
+	std::vector<GLuint> meshEBO;
 
-	GLint lightPosLoc;
-	GLint viewPosLoc;
-	GLint viewLoc;
+	std::vector<GLint> lightPosLoc;
+	std::vector<GLint> viewPosLoc;
+	std::vector<GLint> viewLoc;
+	std::vector<GLint> scaleLoc;
+	std::vector<GLint> rotationLoc;
+	std::vector<GLint> translationLoc;
 
 	glm::vec3 cameraPosition;
 	glm::vec3 cameraFront;

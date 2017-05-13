@@ -4,6 +4,7 @@ out vec4 color;
 
 in vec3 Position;
 in vec3 Normal;
+in vec4 Color;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -11,14 +12,12 @@ uniform vec3 viewPos;
 
 void main()
 {
-    vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
-
     // Constants
-    float ambientStrength = 0.3f;
-    float diffuseStrength = 0.8f;
+    float ambientStrength = 0.7f;
+    float diffuseStrength = 0.9f;
     float specularStrength = 1.0f;
     int shininess = 32;
-    float eta = 4.0f;
+    float eta = 10.0f;
 
 
     // Ambient
@@ -39,6 +38,6 @@ void main()
     float F = F0 + (1.0f - F0) * pow(1.0f - dot(halfDir, viewDir) , 5);
 
     // Compute final color
-    vec3 result = (ambient + diffuse + F * specular) * objectColor;
-    color = vec4(result, 1.0f);
+    vec3 result = (ambient + diffuse + F * specular) * Color.xyz;
+    color = vec4(result, Color.w);
 }

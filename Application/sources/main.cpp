@@ -37,9 +37,7 @@ int main(int argc, char *argv[])
 		detector.setROI(recognizer.getROI());
 		detector.execute(webcam.getFrame());
 		recognizer.searchMarker(webcam.getFrame(), detector.getCornerGroupsList());
-		if (recognizer.identified()) {
-			pnp.solve(recognizer.getOrderedCorners());
-		}
+		pnp.solve(recognizer.getOrderedCorners(), recognizer.identified());
 #ifdef DEBUG
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		double time = std::chrono::duration<double>(end - start).count();
