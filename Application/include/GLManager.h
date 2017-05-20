@@ -15,7 +15,7 @@ public:
 	void event() const;
 	bool running() const;
 	void swapBuffers() const;
-	void draw(const cv::Mat & frame, PnPSolver *pnp);
+	void draw(const cv::Mat & frame, const PnPSolver *pnp);
 
 private:
 	void initContext();
@@ -25,8 +25,8 @@ private:
 	void initMeshes();
 	void initUniforms();
 	void drawFrame(const cv::Mat & frame) const;
-	void drawMeshes( PnPSolver *pnp);
-	void getCameraVectors(PnPSolver *pnp);
+	void drawMeshes(const PnPSolver *pnp);
+	void getCameraVectors(const PnPSolver *pnp);
 	void computeLightPosition();
 
 	// DATA

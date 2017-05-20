@@ -76,7 +76,7 @@ void GLManager::swapBuffers() const
 	glfwSwapBuffers(window);
 }
 
-void GLManager::draw(const cv::Mat & frame, PnPSolver *pnp)
+void GLManager::draw(const cv::Mat & frame, const PnPSolver *pnp)
 {
 	// Clear the color buffer and the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -292,7 +292,7 @@ void GLManager::drawFrame(const cv::Mat & frame) const
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GLManager::drawMeshes(PnPSolver *pnp)
+void GLManager::drawMeshes(const PnPSolver *pnp)
 {
 	glEnable(GL_DEPTH_TEST);
 
@@ -331,7 +331,7 @@ void GLManager::drawMeshes(PnPSolver *pnp)
 	}
 }
 
-void GLManager::getCameraVectors(PnPSolver *pnp)
+void GLManager::getCameraVectors(const PnPSolver *pnp)
 {
 	if (!pnp->wasSolvedLastFrame()) {
 		cameraPosition = pnp->getCameraPosition();

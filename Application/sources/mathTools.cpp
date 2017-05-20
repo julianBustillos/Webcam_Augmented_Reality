@@ -54,6 +54,27 @@ float MathTools::edgelOrientation(int scanDirVal, int strideDirVal, EdgelType ty
 	return orientation;
 }
 
+float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
+{
+	float y = (float)lp2[0] - (float)lp1[0];
+	float x = (float)lp2[1] - (float)lp1[1];
+
+	return atan2f(-y, x);
+}
+
+float MathTools::pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p)
+{
+	float temp = (float)abs((lp2[0] - lp1[0]) * (lp1[1] - p[1]) - (lp2[1] - lp1[1]) * (lp1[0] - p[0]));
+	temp /= (float)sqrt((lp2[0] - lp1[0]) * (lp2[0] - lp1[0]) + (lp2[1] - lp1[1]) * (lp2[1] - lp1[1]));
+	return temp;
+}
+
+float MathTools::pointPointDistance(cv::Vec2i p1, cv::Vec2i p2)
+{
+	cv::Vec2i delta = p2 - p1;
+	return (float)sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+}
+
 int MathTools::grayScaleValue(const cv::Mat & frame, cv::Vec2i point)
 {
 	int B = frame.at<cv::Vec3b>(point)[0];
@@ -89,7 +110,7 @@ float MathTools::mod2Pi(float val)
 		return val - 2 * M_PI;
 	}
 
-	if (val < - M_PI) {
+	if (val < -M_PI) {
 		return val + 2 * M_PI;
 	}
 
@@ -126,60 +147,46 @@ double MathTools::det3x3(const cv::Mat & mat)
 	return det;
 }
 
-double MathTools::trace3x1(const cv::Mat & mat)
+double MathTools::norm3x1(cv::Mat vec)
 {
-	double trace = 0.;
+	return sqrt(vec.at<double>(0, 0) * vec.at<double>(0, 0) + vec.at<double>(1, 0) * vec.at<double>(1, 0) + vec.at<double>(2, 0) * vec.at<double>(2, 0));
+}
 
-	for (int i = 0; i < 3; i++) {
-		trace += mat.at<double>(i, 0);
+void MathTools::findHomography(const std::vector<cv::Vec2d>& original, const std::vector<cv::Vec2d>& transformed, cv::Mat & homography)
+{
+	cv::Mat A = cv::Mat::zeros(8, 9, CV_64F);
+
+	for (int pIdx = 0; pIdx < 4; pIdx++) {
+		A.at<double>(2 * pIdx, 3) = -transformed[pIdx][0];
+		A.at<double>(2 * pIdx, 4) = -transformed[pIdx][1];
+		A.at<double>(2 * pIdx, 5) = -1.0;
+
+		A.at<double>(2 * pIdx, 6) = original[pIdx][1] * transformed[pIdx][0];
+		A.at<double>(2 * pIdx, 7) = original[pIdx][1] * transformed[pIdx][1];
+		A.at<double>(2 * pIdx, 8) = original[pIdx][1];
+
+		A.at<double>(2 * pIdx + 1, 0) = transformed[pIdx][0];
+		A.at<double>(2 * pIdx + 1, 1) = transformed[pIdx][1];
+		A.at<double>(2 * pIdx + 1, 2) = 1.0;
+
+		A.at<double>(2 * pIdx + 1, 6) = -original[pIdx][0] * transformed[pIdx][0];
+		A.at<double>(2 * pIdx + 1, 7) = -original[pIdx][0] * transformed[pIdx][1];
+		A.at<double>(2 * pIdx + 1, 8) = -original[pIdx][0];
 	}
 
-	return trace;
+	cv::SVD::solveZ(A, homography);
+	homography = homography.reshape(1, 3);
 }
 
-double MathTools::squareNorm(const cv::Mat & vec, int size)
+void MathTools::findHomography(const std::vector<cv::Vec2i>& original, const std::vector<cv::Vec2d>& transformed, cv::Mat & homography) 
 {
-	double res = 0.;
+	std::vector<cv::Vec2d> original_d;
+	original_d.resize(4);
+	
+	original_d[0] = cv::Vec2d(original[0]);
+	original_d[1] = cv::Vec2d(original[1]);
+	original_d[2] = cv::Vec2d(original[2]);
+	original_d[3] = cv::Vec2d(original[3]);
 
-	for (int k = 0; k < size; k++) {
-		res += vec.at<double>(k, 0) * vec.at<double>(k, 0);
-	}
-
-	return res;
-}
-
-double MathTools::infNorm(const cv::Mat & vec, int size)
-{
-	double max = 0.;
-	double tmp;
-
-	for (int k = 0; k < size; k++) {
-		tmp = abs(vec.at<double>(k, 0));
-		if (tmp > max) {
-			max = tmp;
-		}
-	}
-
-	return tmp;
-}
-
-float MathTools::lineOrientation(cv::Vec2i lp1, cv::Vec2i lp2)
-{
-	float y = (float)lp2[0] - (float)lp1[0];
-	float x = (float)lp2[1] - (float)lp1[1];
-
-	return atan2f(-y, x);
-}
-
-float MathTools::pointLineDistance(cv::Vec2i lp1, cv::Vec2i lp2, cv::Vec2i p)
-{
-	float temp = (float)abs((lp2[0] - lp1[0]) * (lp1[1] - p[1]) - (lp2[1] - lp1[1]) * (lp1[0] - p[0]));
-	temp /= (float)sqrt((lp2[0] - lp1[0]) * (lp2[0] - lp1[0]) + (lp2[1] - lp1[1]) * (lp2[1] - lp1[1]));
-	return temp;
-}
-
-float MathTools::pointPointDistance(cv::Vec2i p1, cv::Vec2i p2)
-{
-	cv::Vec2i delta = p2 - p1;
-	return (float)sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+	findHomography(original_d, transformed, homography);
 }

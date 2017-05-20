@@ -9,14 +9,13 @@ MarkerRecognizer::MarkerRecognizer(int width, int height) :
 	frameSize[0] = width;
 	frameSize[1] = height;
 
-	A = cv::Mat::zeros(8, 9, CV_32F);
 	orderedCorners.resize(4, cv::Vec2i(0, 0));
 	worldCorners.resize(4);
 
-	worldCorners[0] = cv::Vec2i(0, 0);
-	worldCorners[1] = cv::Vec2i(0, 10);
-	worldCorners[2] = cv::Vec2i(10, 10);
-	worldCorners[3] = cv::Vec2i(10, 0);
+	worldCorners[0] = cv::Vec2d(0., 0.);
+	worldCorners[1] = cv::Vec2d(0., 10.);
+	worldCorners[2] = cv::Vec2d(10., 10.);
+	worldCorners[3] = cv::Vec2d(10., 0.);
 
 	computeDirectionIndices();
 }
@@ -31,8 +30,7 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 	Direction dir;
 
 	for (int idx = 0; idx < cornerGroups.size(); idx++) {
-		setA(cornerGroups[idx]);
-		solveH();
+		MathTools::findHomography(cornerGroups[idx], worldCorners, homography);
 		dir = getDirection(frame);
 		if (dir != Direction::UNKNOWN) {
 #ifdef DEBUG
@@ -49,8 +47,7 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 	}
 
 	if (foundOnce) {
-		setA(unorderedCorners);
-		solveH();
+		MathTools::findHomography(unorderedCorners, worldCorners, homography);
 		dir = getDirection(frame);
 		if (dir != Direction::UNKNOWN) {
 			computeOrderedCorners(unorderedCorners, dir);
@@ -150,53 +147,28 @@ void MarkerRecognizer::computeDirectionIndices() {
 	directionIndices[(int)Direction::LEFT] = getRotateIdentifier(marker, 0, 1, 5, -1, false);
 }
 
-void MarkerRecognizer::setA(const std::vector<cv::Vec2i> & corners) {
-	for (int pIdx = 0; pIdx < 4; pIdx++) {
-		A.at<float>(2 * pIdx, 3) = (float)-worldCorners[pIdx][0];
-		A.at<float>(2 * pIdx, 4) = (float)-worldCorners[pIdx][1];
-		A.at<float>(2 * pIdx, 5) = -1.0f;
-
-		A.at<float>(2 * pIdx, 6) = (float)corners[pIdx][1] * worldCorners[pIdx][0];
-		A.at<float>(2 * pIdx, 7) = (float)corners[pIdx][1] * worldCorners[pIdx][1];
-		A.at<float>(2 * pIdx, 8) = (float)corners[pIdx][1];
-
-		A.at<float>(2 * pIdx + 1, 0) = (float)worldCorners[pIdx][0];
-		A.at<float>(2 * pIdx + 1, 1) = (float)worldCorners[pIdx][1];
-		A.at<float>(2 * pIdx + 1, 2) = 1.0f;
-
-		A.at<float>(2 * pIdx + 1, 6) = (float)-corners[pIdx][0] * worldCorners[pIdx][0];
-		A.at<float>(2 * pIdx + 1, 7) = (float)-corners[pIdx][0] * worldCorners[pIdx][1];
-		A.at<float>(2 * pIdx + 1, 8) = (float)-corners[pIdx][0];
-	}
-}
-
-void MarkerRecognizer::solveH() {
-	cv::SVD::solveZ(A, h);
-	h = h.reshape(1, 3);
-}
-
-cv::Vec2i MarkerRecognizer::getFrameCoordinates(float worldX, float worldY) const
+cv::Vec2i MarkerRecognizer::getFrameCoordinates(double worldX, double worldY) const
 {
-	cv::Mat point = h * cv::Mat(cv::Vec3f(worldX, worldY, 1.0f));
-	point /= point.at<float>(2, 0);
+	cv::Mat point = homography * cv::Mat(cv::Vec3d(worldX, worldY, 1.0f));
+	point /= point.at<double>(2, 0);
 
 	for (int dim = 0; dim < 2; dim++) {
-		if (point.at<float>(dim, 0) < 0.0f) {
-			point.at<float>(dim, 0) = 0.0f;
+		if (point.at<double>(dim, 0) < 0.0f) {
+			point.at<double>(dim, 0) = 0.0f;
 		}
-		else if (point.at<float>(dim, 0) >= frameSize[1 - dim]) {
-			point.at<float>(dim, 0) = (float)frameSize[1 - dim] - 1.0f;
+		else if (point.at<double>(dim, 0) >= frameSize[1 - dim]) {
+			point.at<double>(dim, 0) = (double)frameSize[1 - dim] - 1.0f;
 		}
 	}
 
-	return cv::Vec2i((int)point.at<float>(0, 0), (int)point.at<float>(1, 0));
+	return cv::Vec2i((int)point.at<double>(0, 0), (int)point.at<double>(1, 0));
 }
 
 int MarkerRecognizer::getColor(const cv::Mat & frame, int i, int j) const
 {
-	float grayVal = 0.0f;
-	for (float y = j + 2.2f; y < j + 3.0f; y += 0.2f) {
-		for (float x = i + 2.2f; x < i + 3.0f; x += 0.2f) {
+	double grayVal = 0.0f;
+	for (double y = j + 2.2f; y < j + 3.0f; y += 0.2f) {
+		for (double x = i + 2.2f; x < i + 3.0f; x += 0.2f) {
 			grayVal += MathTools::grayScaleValue(frame, getFrameCoordinates(x, y));
 		}
 	}

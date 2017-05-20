@@ -20,9 +20,7 @@ private:
 	cv::Mat getMarkerMatrix();
 	int getRotateIdentifier(const cv::Mat & marker, int initI, int incrI, int initJ, int incrJ, bool reverse) const;
 	void computeDirectionIndices();
-	void setA(const std::vector<cv::Vec2i> & corners);
-	void solveH();
-	cv::Vec2i getFrameCoordinates(float worldX, float worldY) const;
+	cv::Vec2i getFrameCoordinates(double worldX, double worldY) const;
 	int getColor(const cv::Mat & frame, int i, int j) const;
 	Direction getDirection(const cv::Mat & frame) const;
 	void computeOrderedCorners(const std::vector<cv::Vec2i> corners, Direction dir);
@@ -32,13 +30,12 @@ private:
 	int blackElementCount;
 	int frameSize[2];
 	int directionIndices[4];
-	cv::Mat A;
-	cv::Mat h;
+	cv::Mat homography;
 	bool found;
 	bool foundOnce;
 	int lastFoundFrame;
 	std::vector<cv::Vec2i> triangle;
-	std::vector<cv::Vec2i> worldCorners;
+	std::vector<cv::Vec2d> worldCorners;
 	std::vector<cv::Vec2i> unorderedCorners;
 	std::vector<cv::Vec2i> orderedCorners;
 	Direction currentDir;

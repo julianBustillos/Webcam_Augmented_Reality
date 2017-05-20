@@ -12,28 +12,35 @@ PnPSolver::PnPSolver(int width, int height) :
 	A.at<double>(1, 2) = width / 2.;
 	A.at<double>(2, 2) = 1.;
 
-	pw[0] = cv::Vec3d (0.,  0.,  0.);
+	pw.resize(4);
+	pw[0] = cv::Vec3d(0.,  0.,  0.);
 	pw[1] = cv::Vec3d(-10.,  0.,  0.);
 	pw[2] = cv::Vec3d(-10.,  0., -10.);
 	pw[3] = cv::Vec3d( 0.,  0., -10.);
 
-	M = cv::Mat::zeros(8, 9, CV_64F);
-	vDist = cv::Mat::zeros(3, 1, CV_64F);
-	cwDist = cv::Mat::zeros(3, 1, CV_64F);
+	pw_plane.resize(4);
+	u_n.resize(4);
+
+	R_plane = cv::Mat::zeros(3, 3, CV_64F);
+	t_plane = cv::Mat::zeros(3, 1, CV_64F);
+
 	R = cv::Mat::zeros(3, 3, CV_64F);
 	R_inv = cv::Mat::zeros(3, 3, CV_64F);
 	t = cv::Mat::zeros(3, 1, CV_64F);
 
 	computeFocalLength();
-	computeControlPoints();
-	computeBarycentricCoords();
+	A_inv = A.inv(cv::DECOMP_SVD);
+
+	estimatePlaneTransformation();
+
+	lm.setPW(pw);
 }
 
 PnPSolver::~PnPSolver()
 {
 }
 
-void PnPSolver::solve(std::vector<cv::Vec2i> corners, bool identified)
+void PnPSolver::solve(const std::vector<cv::Vec2i> & corners, bool identified)
 {
 	if (!identified) {
 		solvedLastFrame = false;
@@ -41,73 +48,54 @@ void PnPSolver::solve(std::vector<cv::Vec2i> corners, bool identified)
 		return;
 	}
 
+	for (int idx = 0; idx < 4; idx++) {
+		u_n[idx][0] = A_inv.at<double>(0, 0) * corners[idx][0] + A_inv.at<double>(0, 1) * corners[idx][1] + A_inv.at<double>(0, 2);
+		u_n[idx][1] = A_inv.at<double>(1, 0) * corners[idx][0] + A_inv.at<double>(1, 1) * corners[idx][1] + A_inv.at<double>(1, 2);
+		double w    = A_inv.at<double>(2, 0) * corners[idx][0] + A_inv.at<double>(2, 1) * corners[idx][1] + A_inv.at<double>(2, 2);
+		u_n[idx] /= w;
+	}
+
 	if (firstFrameSolve) {
 		solvedLastFrame = true;
 	}
 	else {
 		firstFrameSolve = true;
+		homographyInit();
 	}
 
-	for (int idx = 0; idx < 4; idx++) {
-			u[idx] = corners[idx];
-	}
-
-	fillM();
-	computeMNullSpace();
-	computeBeta();
-	computePC();
-	estimateTransformation();
-
-	std::cout << getMeanReprojectionError() << std::endl;
-
-	R_inv = R.inv();
-
-	//DEBUG
-	cv::Mat PW = cv::Mat::zeros(4, 3, CV_32F);
-	cv::Mat U = cv::Mat::zeros(4, 2, CV_32F);
-	for (int i = 0; i < 4; i++) {
-		PW.at<float>(i, 0) = (float)pw[i][0];
-		PW.at<float>(i, 1) = (float)pw[i][1];
-		PW.at<float>(i, 2) = (float)pw[i][2];
-		U.at<float>(i, 0) = (float)u[i][0];
-		U.at<float>(i, 1) = (float)u[i][1];
-	}
-	cv::Mat rvec = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat tvec = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat dist = cv::Mat::zeros(8, 1, CV_64F);
-	cv::solvePnP(PW, U, A, dist, rvec, tvec);
-	cv::Rodrigues(rvec, R);
-	R_inv = R.inv();
-	t = tvec;
-	std::cout << getMeanReprojectionError() << std::endl;
-
-	std::cout << std::endl;
+	lm.init(u_n, R, t);
+	lm.optimize();
+	lm.getResult(R, t);
+	
+	R_inv = R.inv(cv::DECOMP_SVD);
 }
 
-glm::vec3 PnPSolver::getCameraPosition()
+glm::vec3 PnPSolver::getCameraPosition() const
 {
 	cv::Vec3d cameraPositionC = cv::Vec3d(0.0f, 0.0f, 0.0f);
 	cv::Vec3d cameraPositionW = getPointWorldCoords(cameraPositionC);
-
-	cameraPositionWLast = worldToOpenGLCoords(cameraPositionW);
 	
-	return cameraPositionWLast;
+	return worldToOpenGLCoords(cameraPositionW);
 }
 
 glm::vec3 PnPSolver::getCameraFront() const
 {
+	cv::Vec3d cameraPositionC = cv::Vec3d(0.0f, 0.0f, 0.0f);
+	cv::Vec3d cameraPositionW = getPointWorldCoords(cameraPositionC);
 	cv::Vec3d cameraFrontC = cv::Vec3d(0.0f, 0.0f, 1.0f);
 	cv::Vec3d cameraFrontW = getPointWorldCoords(cameraFrontC);
-	glm::vec3 cameraFrontRes = glm::normalize(worldToOpenGLCoords(cameraFrontW) - cameraPositionWLast);
+	glm::vec3 cameraFrontRes = glm::normalize(worldToOpenGLCoords(cameraFrontW) - worldToOpenGLCoords(cameraPositionW));
 
 	return cameraFrontRes;
 }
 
 glm::vec3 PnPSolver::getCameraUp() const
 {
+	cv::Vec3d cameraPositionC = cv::Vec3d(0.0f, 0.0f, 0.0f);
+	cv::Vec3d cameraPositionW = getPointWorldCoords(cameraPositionC);
 	cv::Vec3d cameraUpC = cv::Vec3d(-1.0f, 0.0f, 0.0f);
 	cv::Vec3d cameraUpW = getPointWorldCoords(cameraUpC);
-	glm::vec3 cameraUpRes = glm::normalize(worldToOpenGLCoords(cameraUpW) - cameraPositionWLast);
+	glm::vec3 cameraUpRes = glm::normalize(worldToOpenGLCoords(cameraUpW) - worldToOpenGLCoords(cameraPositionW));
 
 	return cameraUpRes;
 }
@@ -117,162 +105,63 @@ void PnPSolver::computeFocalLength()
 	A.at<double>(0, 0) = A.at<double>(1, 1) = A.at<double>(1, 2) / tan(GET(HFOV) * M_PI / 360);
 }
 
-void PnPSolver::computeControlPoints()
+void PnPSolver::estimatePlaneTransformation()
 {
-	cv::Mat data = cv::Mat::zeros(4, 3, CV_64F);
-
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 3; j++) {
-			data.at<double>(i, j) = pw[i][j];
-		}
-	}
-
-	cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW);
-
-	cw[0] = pca.mean;
-	for (int idx = 1; idx < 3; idx++) {
-		cw[idx] = pca.eigenvectors.row(idx - 1);
-		cw[idx] *= sqrt(pca.eigenvalues.at<double>(idx - 1));
-		cw[idx] += cw[0];
-	}
-}
-
-void PnPSolver::computeBarycentricCoords()
-{
-	alpha = cv::Mat::zeros(3, 4, CV_64F);
-	cv::Mat P = cv::Mat::zeros(4, 4, CV_64F);
-	cv::Mat C = cv::Mat::zeros(4, 3, CV_64F);
-	cv::Mat S_plus = cv::Mat::zeros(3, 4, CV_64F);
-	cv::Mat W;
+	cv::Mat mu = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat L = cv::Mat::zeros(3, 1, CV_64F);
+	cv::Mat Sigma = cv::Mat::zeros(3, 3, CV_64F);
 	cv::Mat U;
-	cv::Mat Vt;
+	cv::Mat W;
 
 	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 3; i++) {
-			P.at<double>(i, j) = pw[j][i];
+			mu.at<double>(i, 0) += pw[j][i];
 		}
-		P.at<double>(3, j) = 1.;
 	}
+	mu /= 4.;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 3; i++) {
-			C.at<double>(i, j) = cw[j][i];
+			L.at<double>(i, 0) = pw[j][i] - mu.at<double>(i, 0);
 		}
-		C.at<double>(3, j) = 1.;
+		Sigma += L * L.t();
 	}
 
-	cv::SVD::compute(C, W, U, Vt, cv::SVD::FULL_UV);
+	cv::SVD::compute(Sigma, W, U, R_plane);
+
+	if (MathTools::det3x3(R_plane) < 0) {
+		R_plane *= -1.;
+	}
+
+	t_plane = - R_plane * mu;
+
+	for (int idx = 0; idx < 4; idx++) {
+		pw_plane[idx][0] = R_plane.at<double>(0, 0) * pw[idx][0] + R_plane.at<double>(0, 1) * pw[idx][1] + R_plane.at<double>(0, 2) * pw[idx][2] + t_plane.at<double>(0, 0);
+		pw_plane[idx][1] = R_plane.at<double>(1, 0) * pw[idx][0] + R_plane.at<double>(1, 1) * pw[idx][1] + R_plane.at<double>(1, 2) * pw[idx][2] + t_plane.at<double>(1, 0);
+	}
+}
+
+void PnPSolver::homographyInit()
+{
+	MathTools::findHomography(u_n, pw_plane, homography);
+
+	double h_norm[2];
+	h_norm[0] = MathTools::norm3x1(homography.col(0));
+	h_norm[1] = MathTools::norm3x1(homography.col(1));
 
 	for (int i = 0; i < 3; i++) {
-		S_plus.at<double>(i, i) = 1. / W.at<double>(i);
+		homography.at<double>(i, 0) /= h_norm[0];
+		homography.at<double>(i, 1) /= h_norm[1];
 	}
 
-	alpha = Vt.t() * S_plus * U.t() * P;
-}
+	t = homography.col(2) * 2. / (h_norm[0] + h_norm[1]);
 
-void PnPSolver::fillM()
-{
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 3; j++) {
-			M.at<double>(i * 2, j * 3) = alpha.at<double>(j, i) * A.at<double>(0, 0);
-			M.at<double>(i * 2, j * 3 + 2) = alpha.at<double>(j, i) * (A.at<double>(0, 2) - u[i][0]);
-			M.at<double>(i * 2 + 1, j * 3 + 1) = alpha.at<double>(j, i) * A.at<double>(1, 1);
-			M.at<double>(i * 2 + 1, j * 3 + 2) = alpha.at<double>(j, i) * (A.at<double>(1, 2) - u[i][1]);
-		}
-	}
-}
+	homography.at<double>(0, 2) = homography.at<double>(1, 0) * homography.at<double>(2, 1) - homography.at<double>(2, 0) * homography.at<double>(1, 1);
+	homography.at<double>(1, 2) = homography.at<double>(2, 0) * homography.at<double>(0, 1) - homography.at<double>(0, 0) * homography.at<double>(2, 1);
+	homography.at<double>(2, 2) = homography.at<double>(0, 0) * homography.at<double>(1, 1) - homography.at<double>(1, 0) * homography.at<double>(0, 1);
 
-void PnPSolver::computeMNullSpace()
-{
-	cv::Mat W;
-	cv::Mat U;
-	cv::Mat Vt;
-	cv::Mat vData;
-
-	cv::SVD::compute(M, W, U, Vt, cv::SVD::FULL_UV);
-	vData = Vt.t().col(8);
-	v[0] = cv::Vec3d(vData.at<double>(0, 0), vData.at<double>(1, 0), vData.at<double>(2, 0));
-	v[1] = cv::Vec3d(vData.at<double>(3, 0), vData.at<double>(4, 0), vData.at<double>(5, 0));
-	v[2] = cv::Vec3d(vData.at<double>(6, 0), vData.at<double>(7, 0), vData.at<double>(8, 0));
-}
-
-void PnPSolver::computeBeta()
-{
-	cv::Mat W;
-	cv::Mat U;
-	cv::Mat Vt;
-	cv::Mat S_plus = cv::Mat::zeros(1, 3, CV_64F);
-	cv::Mat betaMat;
-
-	cwDist.at<double>(0, 0) = MathTools::diffSquareNorm(cw[0], cw[1]);
-	cwDist.at<double>(1, 0) = MathTools::diffSquareNorm(cw[0], cw[2]);
-	cwDist.at<double>(2, 0) = MathTools::diffSquareNorm(cw[1], cw[2]);
-
-	vDist.at<double>(0, 0) = MathTools::diffSquareNorm(v[0], v[1]);
-	vDist.at<double>(1, 0) = MathTools::diffSquareNorm(v[0], v[2]);
-	vDist.at<double>(2, 0) = MathTools::diffSquareNorm(v[1], v[2]);
-
-	cv::SVD::compute(vDist, W, U, Vt, cv::SVD::FULL_UV);
-
-	S_plus.at<double>(0, 0) = 1. / W.at<double>(0, 0);
-	betaMat = Vt.t() * S_plus * U.t() * cwDist;
-	beta = betaMat.at<double>(0, 0);
-	beta = (beta < 0.) ? sqrt(-beta) : sqrt(beta);
-}
-
-void PnPSolver::computePC()
-{
-	for (int i = 0; i < 4; i++) {
-		pc[i] = cv::Vec3d();
-		for (int j = 0; j < 3; j++) {
-			pc[i] += alpha.at<double>(j, i) * beta * v[j];
-		}
-	}
-}
-
-void PnPSolver::estimateTransformation()
-{
-	cv::Mat mu = cv::Mat(3, 2, CV_64F);
-	double sigma = 0.;
-	cv::Mat X = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat Y = cv::Mat::zeros(3, 1, CV_64F);
-	cv::Mat Sigma = cv::Mat::zeros(3, 3, CV_64F);
-	cv::Mat S = cv::Mat::eye(3, 3, CV_64F);
-	cv::Mat U;
-	cv::Mat D;
-	cv::Mat Vt;
-
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 3; j++) {
-			mu.at<double>(j, 0) += pw[i][j];
-			mu.at<double>(j, 1) += pc[i][j];
-		}
-	}
-	mu /= 4;
-
-	for (int i = 0; i < 4; i++) {
-		sigma += MathTools::diffSquareNorm(pw[i], cv::Vec3d(mu.col(0)));
-	}
-	sigma /= 4;
-
-	for (int j = 0; j < 4; j++) {
-		for (int i = 0; i < 3; i++) {
-			X.at<double>(i, 0) = pw[j][i] - mu.at<double>(i, 0);
-			Y.at<double>(i, 0) = pc[j][i] - mu.at<double>(i, 1);
-		}
-		Sigma += Y * X.t();
-	}
-	Sigma /= 4;
-
-	cv::SVD::compute(Sigma, D, U, Vt, cv::SVD::FULL_UV);
-
-	if (MathTools::det3x3(U) * MathTools::det3x3(Vt) < 0) {
-		S.at<double>(2, 2) = -1.;
-	}
-
-	R = U * S * Vt;
-	t = mu.col(1) - R * mu.col(0);
-	c = MathTools::trace3x1(S * D) / sigma;
+	t += homography * t_plane;
+	R = homography * R_plane;
 }
 
 double PnPSolver::getMeanReprojectionError() const
@@ -280,27 +169,17 @@ double PnPSolver::getMeanReprojectionError() const
 	double error = 0.;
 
 	for (int i = 0; i < 4; i++) {
-		//error += MathTools::diffSquareNorm(pc[i], getPointCameraCoords(pw[i]));
-		cv::Vec3d pwi_c = getPointCameraCoords(pw[i]);
-		cv::Mat PWI_c = cv::Mat::zeros(3, 1, CV_64F);
-		PWI_c.at<double>(0, 0) = pwi_c[0];
-		PWI_c.at<double>(1, 0) = pwi_c[1];
-		PWI_c.at<double>(2, 0) = pwi_c[2];
-		PWI_c = A * PWI_c;
-		PWI_c /= PWI_c.at<double>(2, 0);
-		pwi_c[0] = PWI_c.at<double>(0, 0);
-		pwi_c[1] = PWI_c.at<double>(1, 0);
-		pwi_c[2] = PWI_c.at<double>(2, 0);
-		
-		cv::Vec3d ui = cv::Vec3d(u[i][0], u[i][1], 1.);
+		cv::Vec3d ui_n = cv::Vec3d(u_n[i][0], u_n[i][1], 1.);
+		cv::Mat pwi_c = getPointCameraCoords(pw[i]);
+		pwi_c /= pwi_c.at<double>(2, 0);
 
-		error += MathTools::diffSquareNorm(ui, pwi_c);
+		error += MathTools::diffSquareNorm(ui_n, pwi_c);
 	}
 
 	return error / 4;
 }
 
-cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
+cv::Mat PnPSolver::getPointCameraCoords(cv::Vec3d point) const
 {
 	cv::Mat pointW = cv::Mat::zeros(3, 1, CV_64F);
 	cv::Mat pointC = cv::Mat::zeros(3, 1, CV_64F);
@@ -311,7 +190,7 @@ cv::Vec3d PnPSolver::getPointCameraCoords(cv::Vec3d point) const
 
 	pointC = R * pointW + t;
 
-	return cv::Vec3d(pointC);
+	return pointC;
 }
 
 cv::Vec3d PnPSolver::getPointWorldCoords(cv::Vec3d point) const

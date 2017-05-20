@@ -136,6 +136,7 @@
     <ClCompile Include="sources\constants.cpp" />
     <ClCompile Include="sources\debugInfo.cpp" />
     <ClCompile Include="sources\cornerDetector.cpp" />
+    <ClCompile Include="sources\LevenbergMarquardt.cpp" />
     <ClCompile Include="sources\GLManager.cpp" />
     <ClCompile Include="sources\keyboard.cpp" />
     <ClCompile Include="sources\main.cpp" />
@@ -153,6 +154,7 @@
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\debugInfo.h" />
     <ClInclude Include="include\cornerDetector.h" />
+    <ClInclude Include="include\LevenbergMarquardt.h" />
     <ClInclude Include="include\geometry.h" />
     <ClInclude Include="include\GLManager.h" />
     <ClInclude Include="include\keyboard.h" />

@@ -21,7 +21,7 @@ public:
 	static float mod2Pi(float val);
 	static double diffSquareNorm(cv::Vec3d vec1, cv::Vec3d vec2);
 	static double det3x3(const cv::Mat & mat);
-	static double trace3x1(const cv::Mat & mat);
-	static double squareNorm(const cv::Mat & vec, int size);
-	static double infNorm(const cv::Mat & vec, int size);
+	static double norm3x1(cv::Mat vec);
+	static void findHomography(const std::vector<cv::Vec2d> & original, const std::vector<cv::Vec2d> & transformed, cv::Mat & homography);
+	static void findHomography(const std::vector<cv::Vec2i> & original, const std::vector<cv::Vec2d> & transformed, cv::Mat & homography);
 };
