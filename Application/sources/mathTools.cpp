@@ -9,11 +9,11 @@ int MathTools::convolution(const cv::Mat & frame, const cv::Vec2i & frameSize, c
 	int firstPos = position.dot(scanDir) - offset;
 	int maxPos = frameSize.dot(scanDir);
 
-	if (firstPos < 0 || firstPos + filter.size() - 1 >= maxPos) {
+	if (firstPos < 0 || firstPos + (int)filter.size() - 1 >= maxPos) {
 		return 0;
 	}
 
-	for (int k = 0; k < filter.size(); k++) {
+	for (int k = 0; k < (int)filter.size(); k++) {
 		cv::Vec2i currentPos = position + (k - offset) * scanDir;
 		sum += frame.at<cv::Vec3b>(currentPos[0], currentPos[1])[channel] * filter[filter.size() - k - 1];
 	}
@@ -31,12 +31,12 @@ float MathTools::orientationDiff(float or1, float or2)
 	float diff1;
 	float diff2;
 
-	diff1 = abs(or1 - or2);
+	diff1 = fabs(or1 - or2);
 	if (or1 < or2) {
-		diff2 = abs(or1 + 2 * M_PI - or2);
+		diff2 = fabs(or1 + 2 * M_PI - or2);
 	}
 	else {
-		diff2 = abs(or2 + 2 * M_PI - or1);
+		diff2 = fabs(or2 + 2 * M_PI - or1);
 	}
 
 	return std::min(diff1, diff2);

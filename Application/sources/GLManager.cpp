@@ -8,8 +8,8 @@
 #include <sstream>
 
 GLManager::GLManager(cv::Mat & frame) :
-	window(nullptr), frameShader(nullptr),
-	width(frame.size().width), height(frame.size().height)
+	width(frame.size().width), height(frame.size().height),
+	window(nullptr), frameShader(nullptr)
 {
 	meshes.clear();
 	meshShaders.clear();
@@ -44,7 +44,7 @@ GLManager::~GLManager()
 		delete frameShader;
 	}
 
-	for (int midx = 0; midx < meshes.size(); midx++) {
+	for (int midx = 0; midx < (int)meshes.size(); midx++) {
 		glDeleteVertexArrays(1, &(meshVAO[midx]));
 		glDeleteBuffers(1, &(meshVBO[midx]));
 		glDeleteBuffers(1, &(meshEBO[midx]));
@@ -98,7 +98,10 @@ void GLManager::initContext()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
 	window = glfwCreateWindow(width, height, "Webcam augmented reality", nullptr, nullptr);
@@ -143,7 +146,7 @@ void GLManager::initShaders()
 	frameShader = new Shader("shaders/texQuad.vert", "shaders/texQuad.frag");
 	
 	meshShaders.resize(meshes.size());
-	for (int midx = 0; midx < meshes.size(); midx++) {
+	for (int midx = 0; midx < (int)meshes.size(); midx++) {
 		meshShaders[midx] = new Shader("shaders/animBlinnPhong.vert", "shaders/animBlinnPhong.frag");
 	}
 }
@@ -209,7 +212,7 @@ void GLManager::initMeshes()
 	meshVBO.resize(meshes.size());
 	meshEBO.resize(meshes.size());
 
-	for (int midx = 0; midx < meshes.size(); midx++) {
+	for (int midx = 0; midx < (int)meshes.size(); midx++) {
 
 		const std::vector<Vertex> & vertices = meshes[midx]->getVertices();
 		const std::vector<Triangle> & indices = meshes[midx]->getIndices();
@@ -232,11 +235,11 @@ void GLManager::initMeshes()
 		glEnableVertexAttribArray(0);
 
 		// Normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vertex::position)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(glm::vec3)));
 		glEnableVertexAttribArray(1);
 
 		// Color attribute
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vertex::position) + sizeof(Vertex::normal)));
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(glm::vec3) + sizeof(glm::vec3)));
 		glEnableVertexAttribArray(2);
 
 		// Unbind VAO
@@ -254,7 +257,7 @@ void GLManager::initUniforms()
 	rotationLoc.resize(meshes.size());
 	translationLoc.resize(meshes.size());
 
-	for (int midx = 0; midx < meshes.size(); midx++) {
+	for (int midx = 0; midx < (int)meshes.size(); midx++) {
 		meshShaders[midx]->use();
 
 		GLint projLoc = glGetUniformLocation(meshShaders[midx]->getProgramId(), "projection");
@@ -305,7 +308,7 @@ void GLManager::drawMeshes(const PnPSolver *pnp)
 	computeLightPosition();
 	glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
 
-	for (int midx = 0; midx < meshes.size(); midx++) {
+	for (int midx = 0; midx < (int)meshes.size(); midx++) {
 		//Activate shader
 		meshShaders[midx]->use();
 

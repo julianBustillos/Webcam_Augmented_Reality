@@ -5,7 +5,7 @@
 
 
 PnPSolver::PnPSolver(int width, int height) :
-	solvedLastFrame(false), firstFrameSolve(false)
+	firstFrameSolve(false), solvedLastFrame(false)
 {
 	A = cv::Mat::zeros(3, 3, CV_64F);
 	A.at<double>(0, 2) = height / 2.;

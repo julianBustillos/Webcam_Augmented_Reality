@@ -29,7 +29,7 @@ void MarkerRecognizer::searchMarker(const cv::Mat & frame, const std::vector<std
 	lastFoundFrame++;
 	Direction dir;
 
-	for (int idx = 0; idx < cornerGroups.size(); idx++) {
+	for (int idx = 0; idx < (int)cornerGroups.size(); idx++) {
 		MathTools::findHomography(cornerGroups[idx], worldCorners, homography);
 		dir = getDirection(frame);
 		if (dir != Direction::UNKNOWN) {

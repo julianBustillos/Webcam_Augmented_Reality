@@ -172,11 +172,11 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector, const Ma
 	}
 
 	if (fps == Active::ENABLED) {
-		printFPS(frame, detector);
+		printFPS(frame);
 	}
 }
 
-void DebugInfo::printFPS(cv::Mat & frame, const CornerDetector & detector) const
+void DebugInfo::printFPS(cv::Mat & frame) const
 {
 	cv::putText(frame, "FPS (real)      : " + std::to_string(realFps), cvPoint(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(102, 0, 0));
 	cv::putText(frame, "FPS (theorical) : " + std::to_string(theoricalFps), cvPoint(3, 45), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(204, 0, 102));
@@ -207,7 +207,7 @@ void DebugInfo::printEdgels(cv::Mat & frame, const CornerDetector & detector) co
 	cv::Scalar blue(255, 0, 0);
 	cv::Scalar green(0, 255, 0);
 
-	for (int k = 0; k < edgelList.size(); k++) {
+	for (int k = 0; k < (int)edgelList.size(); k++) {
 		if (edgelList[k].type == EdgelType::horizontal) {
 			printPoint(frame, edgelList[k].position, 3, green);
 		}
@@ -237,7 +237,7 @@ void DebugInfo::printLines(cv::Mat & frame, const CornerDetector & detector) con
 
 void DebugInfo::printLineList(cv::Mat & frame, const std::vector<Line>& lineList, const cv::Scalar color) const
 {
-	for (int k = 0; k < lineList.size(); k++) {
+	for (int k = 0; k < (int)lineList.size(); k++) {
 		cv::Vec2i reverseP1(lineList[k].p1[1], lineList[k].p1[0]);
 		cv::Vec2i reverseP2(lineList[k].p2[1], lineList[k].p2[0]);
 		cv::line(frame, reverseP1, reverseP2, color, 2);
@@ -262,7 +262,7 @@ void DebugInfo::printExtendedLines(cv::Mat & frame, const CornerDetector & detec
 	validLineList.clear();
 	invalidLineList.clear();
 
-	for (int idx = 0; idx < lineList.size(); idx++) {
+	for (int idx = 0; idx < (int)lineList.size(); idx++) {
 		if (lineList[idx].isValid) {
 			validLineList.push_back(lineList[idx]);
 		}
@@ -286,9 +286,9 @@ void DebugInfo::printCorners(cv::Mat & frame, const CornerDetector & detector) c
 	cv::Vec2i prec;
 
 	//Print link
-	for (int groupIdx = 0; groupIdx < cornerGroupList.size(); groupIdx++) {
+	for (int groupIdx = 0; groupIdx < (int)cornerGroupList.size(); groupIdx++) {
 		prec = cornerGroupList[groupIdx][cornerGroupList[groupIdx].size() - 1];
-		for (int cornerIdx = 0; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
+		for (int cornerIdx = 0; cornerIdx < (int)cornerGroupList[groupIdx].size(); cornerIdx++) {
 			currentLine.p1 = prec;
 			currentLine.p2 = cornerGroupList[groupIdx][cornerIdx];
 			prec = cornerGroupList[groupIdx][cornerIdx];
@@ -299,8 +299,8 @@ void DebugInfo::printCorners(cv::Mat & frame, const CornerDetector & detector) c
 	printLineList(frame, lineList, purple);
 
 	//Print corners
-	for (int groupIdx = 0; groupIdx < cornerGroupList.size(); groupIdx++) {
-		for (int cornerIdx = 0; cornerIdx < cornerGroupList[groupIdx].size(); cornerIdx++) {
+	for (int groupIdx = 0; groupIdx < (int)cornerGroupList.size(); groupIdx++) {
+		for (int cornerIdx = 0; cornerIdx < (int)cornerGroupList[groupIdx].size(); cornerIdx++) {
 			printPoint(frame, cornerGroupList[groupIdx][cornerIdx], 7, purpleBright);
 		}
 	}
@@ -331,7 +331,7 @@ void DebugInfo::printMarker(cv::Mat & frame, const MarkerRecognizer & recognizer
 
 	// Print marker border
 	prec = corners[corners.size() - 1];
-	for (int cornerIdx = 0; cornerIdx < corners.size(); cornerIdx++) {
+	for (int cornerIdx = 0; cornerIdx < (int)corners.size(); cornerIdx++) {
 		currentLine.p1 = prec;
 		currentLine.p2 = corners[cornerIdx];
 		prec = corners[cornerIdx];

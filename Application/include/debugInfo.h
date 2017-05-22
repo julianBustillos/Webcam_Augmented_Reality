@@ -41,7 +41,7 @@ public:
 private:
 	void updateFPS(double time);
 	void print(cv::Mat & frame, const CornerDetector & detector, const MarkerRecognizer & recognizer) const;
-	void printFPS(cv::Mat & frame, const CornerDetector & detector) const;
+	void printFPS(cv::Mat & frame) const;
 	void printRegions(cv::Mat & frame, const CornerDetector & detector) const;
 	void printEdgels(cv::Mat & frame, const CornerDetector & detector) const;
 	void printPoint(cv::Mat & frame, const cv::Vec2i position, int size, const cv::Scalar color) const;

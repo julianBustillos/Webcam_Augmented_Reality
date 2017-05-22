@@ -6,8 +6,8 @@ class Webcam {
 public:
 	Webcam();
 	~Webcam();
-	int getWidth() const;
-	int getHeight() const;
+	int getWidth();
+	int getHeight();
 	void read();
 	cv::Mat & getFrame();
 

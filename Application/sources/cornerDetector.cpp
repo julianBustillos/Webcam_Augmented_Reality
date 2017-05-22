@@ -19,7 +19,7 @@ CornerDetector::CornerDetector(int width, int height)
 	setROI(ROI);
 	
 	regionGrid.resize(regionNumber[0]);
-	for (int i = 0; i < regionGrid.size(); i++) {
+	for (int i = 0; i < (int)regionGrid.size(); i++) {
 		regionGrid[i].resize(regionNumber[1]);
 	}
 }
@@ -85,7 +85,7 @@ const std::vector<Edgel> CornerDetector::getEdgelList() const
 
 	for (int i = 0; i < regionNumber[0]; i++) {
 		for (int j = 0; j < regionNumber[1]; j++) {
-			for (int k = 0; k < regionGrid[i][j].edgels.size(); k++) {
+			for (int k = 0; k < (int)regionGrid[i][j].edgels.size(); k++) {
 				edgelList.push_back(regionGrid[i][j].edgels[k]);
 			}
 		}
@@ -101,7 +101,7 @@ const std::vector<Line> CornerDetector::getLineList() const
 
 	for (int i = 0; i < regionNumber[0]; i++) {
 		for (int j = 0; j < regionNumber[1]; j++) {
-			for (int k = 0; k < regionGrid[i][j].lines.size(); k++) {
+			for (int k = 0; k < (int)regionGrid[i][j].lines.size(); k++) {
 				lineList.push_back(regionGrid[i][j].lines[k]);
 			}
 		}
@@ -157,7 +157,7 @@ void CornerDetector::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelTy
 	std::vector<int> argList;
 
 	for (int strideIdx = strideIdxFirst; strideIdx < strideIdxLast; strideIdx += GET(SCANLINE_STRIDE)) {
-		for (int scanIdx = 0; scanIdx < scanline.size(); scanIdx++) {
+		for (int scanIdx = 0; scanIdx < (int)scanline.size(); scanIdx++) {
 
 			// Get all scanline values
 			cv::Vec2i position = (scanIdxFirst + scanIdx) * scanDir + strideIdx * strideDir;
@@ -167,7 +167,7 @@ void CornerDetector::scanLines(const cv::Mat & frame, cv::Vec2i scanDir, EdgelTy
 			
 		// Search local extremum
 		getAbsArgmaxList(argList, scanline);
-		for (int argIdx = 0; argIdx < argList.size(); argIdx++) {
+		for (int argIdx = 0; argIdx < (int)argList.size(); argIdx++) {
 
 			cv::Vec2i position = (scanIdxFirst + argList[argIdx]) * scanDir + strideIdx * strideDir;
 			int channel1Val = MathTools::convolution(frame, frameSize, filter, position, scanDir, 1);
@@ -192,7 +192,7 @@ void CornerDetector::getAbsArgmaxList(std::vector<int>& argList, const std::vect
 	int temp;
 	argList.clear();
 
-	for (int k = 0; k < scanline.size(); k++) {
+	for (int k = 0; k < (int)scanline.size(); k++) {
 		temp = abs(scanline[k]);
 		if (temp <= GET(INTENSITY_THRESHOLD)) {
 			if (currentArgmax >= 0) {
@@ -263,7 +263,7 @@ void CornerDetector::initEdgelsList(std::vector<int>& index, int i, int j)
 {
 	index.resize(regionGrid[i][j].edgels.size());
 
-	for (int k = 0; k < index.size(); k++) {
+	for (int k = 0; k < (int)index.size(); k++) {
 		index[k] = k;
 	}
 }
@@ -311,14 +311,14 @@ int CornerDetector::countCompatibleEdgels(HypoLine & line, const std::vector<int
 	float dist;
 	float orDiff;
 
-	for (int idx = 0; idx < index.size(); idx++) {
+	for (int idx = 0; idx < (int)index.size(); idx++) {
 		if (idx == line.id1 || idx == line.id2) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
 		
 		orDiff = MathTools::orientationDiff(line.orientation, edgels[index[idx]].orientation);
-		if (abs(orDiff) > GET(ORIENTATION_TOLERANCE)) {
+		if (fabs(orDiff) > GET(ORIENTATION_TOLERANCE)) {
 			line.nonVotersId.push_back(idx);
 			continue;
 		}
@@ -466,7 +466,7 @@ void CornerDetector::deleteMergedLines(std::vector<Line>& lineList, int l1Idx, i
 	int maxIdx = std::max(l1Idx, l2Idx);
 	int next = 1;
 
-	for (int idx = minIdx; idx < lineList.size() - 2; idx++) {
+	for (int idx = minIdx; idx < (int)lineList.size() - 2; idx++) {
 		if (idx + next == maxIdx) {
 			next++;
 		}
@@ -489,8 +489,8 @@ void CornerDetector::addMergedLines(const cv::Mat & frame, std::vector<int> & fi
 		merges.clear();
 
 		// Search merge possibilities (with 2 criterions)
-		for (int l1Idx = 0; l1Idx < temp.size(); l1Idx++) {
-			for (int l2Idx = l1Idx + 1; l2Idx < temp.size(); l2Idx++) {
+		for (int l1Idx = 0; l1Idx < (int)temp.size(); l1Idx++) {
+			for (int l2Idx = l1Idx + 1; l2Idx < (int)temp.size(); l2Idx++) {
 				if (compatibleOrientation(temp[l1Idx], temp[l2Idx]) && compatibleConnectionOrientation(temp[l1Idx], temp[l2Idx], merge)) {
 					merge.l1Idx = l1Idx;
 					merge.l2Idx = l2Idx;
@@ -504,7 +504,7 @@ void CornerDetector::addMergedLines(const cv::Mat & frame, std::vector<int> & fi
 
 		// Find and apply a merging operation
 		finished = true;
-		for (int mIdx = 0; mIdx < merges.size(); mIdx++) {
+		for (int mIdx = 0; mIdx < (int)merges.size(); mIdx++) {
 			if (compatibleConnectionPixelsOrientation(frame, filter, merges[mIdx])) {
 				deleteMergedLines(temp, merges[mIdx].l1Idx, merges[mIdx].l2Idx);
 				newLine.p1 = merges[mIdx].ext1;
@@ -519,7 +519,7 @@ void CornerDetector::addMergedLines(const cv::Mat & frame, std::vector<int> & fi
 	}
 
 	// Complete final list with new merged lines
-	for (int mlIdx = 0; mlIdx < temp.size(); mlIdx++) {
+	for (int mlIdx = 0; mlIdx < (int)temp.size(); mlIdx++) {
 		finalLineList.push_back(temp[mlIdx]);
 	}
 }
@@ -530,13 +530,13 @@ void CornerDetector::extendLines(const cv::Mat & frame)
 	Line currentLine;
 	std::vector<int> filter = GET(FILTER);
 
-	for (int idx = 0; idx < mergedLines.size(); idx++) {
+	for (int idx = 0; idx < (int)mergedLines.size(); idx++) {
 		currentLine = mergedLines[idx];
 		cv::Vec2i dir(currentLine.p2[0] - currentLine.p1[0], currentLine.p2[1] - currentLine.p1[1]);
 		getExtremity(frame, filter, currentLine.p2, dir, currentLine.orientation);
 		getExtremity(frame, filter, currentLine.p1, -dir, currentLine.orientation);
-		currentLine.isValid = isValid(frame, filter, currentLine.p2, dir);
-		currentLine.isValid |= isValid(frame, filter, currentLine.p1, -dir);
+		currentLine.isValid = isValid(frame, currentLine.p2, dir);
+		currentLine.isValid |= isValid(frame, currentLine.p1, -dir);
 		extendedLines.push_back(currentLine);
 	}
 
@@ -603,7 +603,7 @@ void CornerDetector::getExtremity(const cv::Mat & frame, std::vector<int> & filt
 	}
 }
 
-bool CornerDetector::isValid(const cv::Mat & frame, std::vector<int>& filter, const cv::Vec2i & point, const cv::Vec2i & dir)
+bool CornerDetector::isValid(const cv::Mat & frame, const cv::Vec2i & point, const cv::Vec2i & dir)
 {
 	int X, Y, stepX, stepY;
 	float tDeltaX, tDeltaY, tMaxX, tMaxY;
@@ -647,7 +647,7 @@ void CornerDetector::detectCorners()
 	cornerGroups.clear();
 
 	// Get all valid lines
-	for (int idx = 0; idx < extendedLines.size(); idx++) {
+	for (int idx = 0; idx < (int)extendedLines.size(); idx++) {
 		if (extendedLines[idx].isValid) {
 			availableLines.push_back(idx);
 		}
@@ -666,7 +666,7 @@ void CornerDetector::detectCorners()
 	}
 
 	// Generate groups of four linked corners
-	for (int idx = 0; idx < quadList.size(); idx++) {
+	for (int idx = 0; idx < (int)quadList.size(); idx++) {
 		corners.clear();
 		getCorners(corners, quadList[idx]);
 		if (corners.size() ==4)
@@ -691,7 +691,7 @@ void CornerDetector::getQuadrangle(std::deque<int>& indexList, const std::vector
 			break;
 		}
 		finded = false;
-		for (int idx = 1; idx < availableLines.size(); idx++) {
+		for (int idx = 1; idx < (int)availableLines.size(); idx++) {
 			if (isNextLine(extendedLines[availableLines[currentLine]].p2, extendedLines[availableLines[idx]].p1, extendedLines[availableLines[currentLine]].orientation, extendedLines[availableLines[idx]].orientation)) {
 				indexList.push_back(idx);
 				currentLine = idx;
@@ -709,7 +709,7 @@ void CornerDetector::getQuadrangle(std::deque<int>& indexList, const std::vector
 			break;
 		}
 		finded = false;
-		for (int idx = 1; idx < availableLines.size(); idx++) {
+		for (int idx = 1; idx < (int)availableLines.size(); idx++) {
 			if (isNextLine(extendedLines[availableLines[idx]].p2, extendedLines[availableLines[currentLine]].p1, extendedLines[availableLines[idx]].orientation, extendedLines[availableLines[currentLine]].orientation)) {
 				indexList.push_front(idx);
 				currentLine = idx;
@@ -732,12 +732,12 @@ void CornerDetector::removeLines(const std::deque<int>& indexList, std::vector<i
 
 	int shift = 1;
 	int nextIndex = 1;
-	for (int idx = sortedIndexList[0]; idx < availableLines.size(); idx++) {
-		while (sortedIndexList.size() > nextIndex && idx + 1 == sortedIndexList[nextIndex]) {
+	for (int idx = sortedIndexList[0]; idx < (int)availableLines.size(); idx++) {
+		while ((int)sortedIndexList.size() > nextIndex && idx + 1 == sortedIndexList[nextIndex]) {
 			shift++;
 			nextIndex++;
 		}
-		if (idx + shift >= availableLines.size()) {
+		if (idx + shift >= (int)availableLines.size()) {
 			break;
 		}
 		availableLines[idx] = availableLines[idx + shift];
@@ -794,7 +794,7 @@ bool CornerDetector::isNextLine(const cv::Vec2i & p1, const cv::Vec2i & p2, floa
 
 void CornerDetector::getLineGroup(std::deque<int>& linesGroup, const std::deque<int> & indexList, const std::vector<int>& availableLines) const
 {
-	for (int idx = 0; idx < indexList.size(); idx++) {
+	for (int idx = 0; idx < (int)indexList.size(); idx++) {
 		linesGroup.push_back(availableLines[indexList[idx]]);
 	}
 }
