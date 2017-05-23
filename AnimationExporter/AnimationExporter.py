@@ -41,7 +41,11 @@ def exportFaces(meshFile, node):
 
 def exportKeyframes(meshFile, node):
     kfcount = pm.keyframe(node, query=True, kc=True)
-    for kf in pm.keyframe(node, query=True, index=(0,kfcount - 1)):
+    if (kfcount == 0):
+        kflist = [1]
+    else:
+        kflist = pm.keyframe(node, query=True, index=(0,kfcount - 1))
+    for kf in kflist:
         meshFile.write("kf "+str((kf - 1) / 24)+"\n")
 
         pm.currentTime(kf)
