@@ -64,6 +64,7 @@ def exportAnimation(path):
     for item in pm.ls(transforms=True):
         if (item != "front" and item != "persp" and item != "side" and item != "top"):
             meshName = item + ".kfobj"
+            print "Exporting {} ...".format(meshName)
             node = pm.PyNode(item)
             meshFile = openFile(path, meshName)
             exportVertices(meshFile, node)
@@ -73,6 +74,7 @@ def exportAnimation(path):
             exportKeyframes(meshFile, node)
             closeFile(meshFile)
 
+    print "Exportation successful !"
     return
 
 

@@ -7,7 +7,7 @@
 Mesh::Mesh(std::string filename) :
 	firstTime(true)
 {
-	readMesh(filename);
+	readMesh(filename + ".kfobj");
 }
 
 Mesh::~Mesh()
