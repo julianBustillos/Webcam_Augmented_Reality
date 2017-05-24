@@ -6,7 +6,7 @@
 // GENERAL PARAMETERS
 INIT(int, ARTAG_ID, 209192064);
 INIT(std::string, MESH_PATH, "meshes/");
-INIT(std::string, MESH_FILES, "cube.kfobj");
+INIT(std::string, MESH_FILES, "Letter_E Plus Letter_J Equal Number_2 Letter_a Letter_n Letter_s Heart");
 
 // EDGELS DETECTION PARAMETERS
 INIT(int, REGION_PIXEL_SIZE, 60);
