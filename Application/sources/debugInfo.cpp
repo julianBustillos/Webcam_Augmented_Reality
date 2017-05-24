@@ -77,6 +77,7 @@ void DebugInfo::printOnFrame(cv::Mat & frame, double time, const CornerDetector 
 
 void DebugInfo::parametersWindow()
 {
+#ifdef DEBUG
 	// Create window
 	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
 	cv::resizeWindow(windowName, 290, 550);
@@ -110,6 +111,7 @@ void DebugInfo::parametersWindow()
 	cv::setTrackbarPos("PARALLEL", windowName, (int)(GET(PARALLELISM_TOLERANCE) * 180 / M_PI));
 	cv::setTrackbarPos("FRAMES", windowName, GET(MAX_FRAMES));
 	cv::setTrackbarPos("ROI", windowName, GET(ROI_MARGIN));
+#endif
 }
 
 bool DebugInfo::isPaused() const
