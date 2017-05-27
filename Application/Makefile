@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-std=c++11 -W -Wall -O3
+CXXFLAGS=-std=c++11 -W -Wall
 LDFLAGS=-framework OpenGL -lglew -lglfw -lopencv_core -lopencv_highgui -lopencv_calib3d
 EXEC=AR_Card.app
 INCDIR=include
