@@ -9,6 +9,12 @@
 #include <time.h>
 #include "PnPSolver.h"
 
+#ifdef __APPLE__
+#include <unistd.h>
+#include <libproc.h>
+#include <libgen.h>
+#endif
+
 #ifdef DEBUG
 #include "debugInfo.h"
 DebugInfo info;
@@ -19,6 +25,19 @@ int main(int argc, char *argv[])
 {
 	// Initialization
 	std::cout << "INITIALIZATION..." << std::endl;
+#ifdef __APPLE__
+    int ret;
+    pid_t pid; 
+    char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+
+    pid = getpid();
+    ret = proc_pidpath (pid, pathbuf, sizeof(pathbuf));
+    if ( ret <= 0 ) {
+        std::cerr << "pid error" << std::endl;
+    } else {
+	chdir(dirname(pathbuf));
+    }
+#endif
 	std::srand((int)time(NULL));
 	Webcam webcam;
 	GLManager glManager(webcam.getFrame());
