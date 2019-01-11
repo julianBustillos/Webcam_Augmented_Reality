@@ -6,7 +6,7 @@ DEBUG VALUES :
 1 - Debug mode
 */
 
-#define DEBUG 0
+#define DEBUG 1
 
 
 //DEBUG UNDEFINITIONS

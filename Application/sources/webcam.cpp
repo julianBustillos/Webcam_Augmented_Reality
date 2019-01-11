@@ -25,12 +25,12 @@ Webcam::~Webcam()
 
 int Webcam::getWidth() 
 {
-	return (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	return (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
 }
 
 int Webcam::getHeight() 
 {
-	return (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+	return (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 }
 
 void Webcam::read()

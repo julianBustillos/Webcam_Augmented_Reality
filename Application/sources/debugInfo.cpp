@@ -1,7 +1,6 @@
 #include "debugInfo.h"
 #include <iostream>
 #include "constants.h"
-#include <opencv/highgui.h>
 
 
 DebugInfo::DebugInfo() :
@@ -79,7 +78,7 @@ void DebugInfo::parametersWindow()
 {
 #ifdef DEBUG
 	// Create window
-	cv::namedWindow(windowName, CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO | CV_GUI_NORMAL);
+	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE | cv::WINDOW_FREERATIO | cv::WINDOW_GUI_NORMAL);
 	cv::resizeWindow(windowName, 290, 550);
 
 	//Create trackbars
@@ -180,8 +179,8 @@ void DebugInfo::print(cv::Mat & frame, const CornerDetector & detector, const Ma
 
 void DebugInfo::printFPS(cv::Mat & frame) const
 {
-	cv::putText(frame, "FPS (real)      : " + std::to_string(realFps), cvPoint(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(102, 0, 0));
-	cv::putText(frame, "FPS (theorical) : " + std::to_string(theoricalFps), cvPoint(3, 45), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(204, 0, 102));
+	cv::putText(frame, "FPS (real)      : " + std::to_string(realFps), cv::Point(3, 20), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(102, 0, 0));
+	cv::putText(frame, "FPS (theorical) : " + std::to_string(theoricalFps), cv::Point(3, 45), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(204, 0, 102));
 }
 
 void DebugInfo::printRegions(cv::Mat & frame, const CornerDetector & detector) const
